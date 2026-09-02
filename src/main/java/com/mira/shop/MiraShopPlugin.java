@@ -3,7 +3,9 @@ package com.mira.shop;
 import com.mira.shop.command.AdminCommand;
 import com.mira.shop.command.SellAllCommand;
 import com.mira.shop.command.ShopCommand;
+import com.mira.shop.gui.AdminGuiService;
 import com.mira.shop.gui.ShopGuiService;
+import com.mira.shop.listener.AdminMenuListener;
 import com.mira.shop.listener.ShopMenuListener;
 import com.mira.shop.service.EconomyService;
 import com.mira.shop.service.ShopCatalog;
@@ -29,11 +31,13 @@ public final class MiraShopPlugin extends JavaPlugin {
 
         TransactionService transactions = new TransactionService(this, economy);
         ShopGuiService gui = new ShopGuiService(this, catalog, transactions);
+        AdminGuiService adminGui = new AdminGuiService(this, catalog);
 
         getCommand("shop").setExecutor(new ShopCommand(this, catalog, gui));
         getCommand("sellall").setExecutor(new SellAllCommand(this, catalog, transactions));
-        getCommand("mshop").setExecutor(new AdminCommand(this, catalog));
+        getCommand("mshop").setExecutor(new AdminCommand(this, catalog, adminGui));
         getServer().getPluginManager().registerEvents(new ShopMenuListener(gui), this);
+        getServer().getPluginManager().registerEvents(new AdminMenuListener(adminGui), this);
         getLogger().info("MiraShop v" + getPluginMeta().getVersion() + " enabled with " + catalog.sections().size() + " preset sections.");
     }
 
