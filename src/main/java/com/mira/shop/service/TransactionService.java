@@ -62,7 +62,7 @@ public final class TransactionService {
     public int count(Player player, ShopItem item) {
         int count = 0;
         for (ItemStack stack : player.getInventory().getStorageContents()) {
-            if (stack != null && stack.getType() == item.material()) count += stack.getAmount();
+            if (isSellableStack(stack, item)) count += stack.getAmount();
         }
         return count;
     }
@@ -78,13 +78,21 @@ public final class TransactionService {
         ItemStack[] contents = player.getInventory().getStorageContents();
         for (int i = 0; i < contents.length && left > 0; i++) {
             ItemStack stack = contents[i];
-            if (stack == null || stack.getType() != item.material()) continue;
+            if (!isSellableStack(stack, item)) continue;
             int take = Math.min(left, stack.getAmount());
             stack.setAmount(stack.getAmount() - take);
             if (stack.getAmount() <= 0) contents[i] = null;
             left -= take;
         }
         player.getInventory().setStorageContents(contents);
+    }
+
+    private boolean isSellableStack(ItemStack stack, ShopItem item) {
+        if (stack == null || stack.getType() != item.material()) return false;
+        // Default shop entries represent plain vanilla items. Any metadata can carry
+        // enchantments, custom names, damage, model data, or Mira PDC tags, so it is
+        // deliberately excluded from material-only selling to protect custom items.
+        return !stack.hasItemMeta();
     }
 
     private boolean hasSpace(Player player, ItemStack adding) {
