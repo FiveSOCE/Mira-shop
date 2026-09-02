@@ -60,7 +60,7 @@ public final class AdminCommand implements CommandExecutor {
 
                 boolean essentialsUpdated = Bukkit.dispatchCommand(
                         Bukkit.getConsoleSender(),
-                        "essentials:setworth " + material.name().toLowerCase(Locale.ROOT) + " " + value
+                        "setworth " + material.name().toLowerCase(Locale.ROOT) + " " + value
                 );
 
                 plugin.msg(sender, "&aSet &f" + pretty(material.name()) + "&a to &f" + plugin.money(value)
@@ -75,6 +75,7 @@ public final class AdminCommand implements CommandExecutor {
                 if (args[3].equalsIgnoreCase("buy")) catalog.setPrice(section, item, value, null);
                 else if (args[3].equalsIgnoreCase("sell")) catalog.setPrice(section, item, null, value);
                 else throw new IllegalArgumentException();
+                plugin.syncEssentialsWorth();
                 plugin.msg(sender, "&aPrice updated.");
                 return true;
             }
@@ -86,6 +87,7 @@ public final class AdminCommand implements CommandExecutor {
                 double buy = Double.parseDouble(args[3]);
                 double sell = Double.parseDouble(args[4]);
                 catalog.addHandItem(section, id, hand.getType(), buy, sell);
+                plugin.syncEssentialsWorth();
                 plugin.msg(sender, "&aShop item added from your hand.");
                 return true;
             }
