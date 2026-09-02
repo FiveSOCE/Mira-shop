@@ -60,6 +60,26 @@ public final class ShopCatalog {
         return Optional.empty();
     }
 
+    public synchronized int setPriceByMaterial(Material material, double price) {
+        ConfigurationSection root = yaml.getConfigurationSection("sections");
+        if (root == null) return 0;
+        int changed = 0;
+        for (String sectionId : root.getKeys(false)) {
+            ConfigurationSection itemRoot = root.getConfigurationSection(sectionId + ".items");
+            if (itemRoot == null) continue;
+            for (String itemId : itemRoot.getKeys(false)) {
+                String base = "sections." + sectionId + ".items." + itemId;
+                Material configured = Material.matchMaterial(yaml.getString(base + ".material", itemId));
+                if (configured != material) continue;
+                yaml.set(base + ".buy", price);
+                yaml.set(base + ".sell", price);
+                changed++;
+            }
+        }
+        if (changed > 0) saveAndReload();
+        return changed;
+    }
+
     public synchronized void setPrice(String sectionId, String itemId, Double buy, Double sell) {
         String base = "sections." + sectionId + ".items." + itemId;
         if (buy != null) yaml.set(base + ".buy", buy);
