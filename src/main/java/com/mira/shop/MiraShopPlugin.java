@@ -1,0 +1,58 @@
+package com.mira.shop;
+
+import com.mira.shop.command.AdminCommand;
+import com.mira.shop.command.SellAllCommand;
+import com.mira.shop.command.ShopCommand;
+import com.mira.shop.gui.ShopGuiService;
+import com.mira.shop.listener.ShopMenuListener;
+import com.mira.shop.service.EconomyService;
+import com.mira.shop.service.ShopCatalog;
+import com.mira.shop.service.TransactionService;
+import com.mira.shop.util.Text;
+import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.text.DecimalFormat;
+
+public final class MiraShopPlugin extends JavaPlugin {
+    private final DecimalFormat money = new DecimalFormat("0.00");
+    private ShopCatalog catalog;
+    private EconomyService economy;
+
+    @Override
+    public void onEnable() {
+        saveDefaultConfig();
+        catalog = new ShopCatalog(this);
+        catalog.load();
+        economy = new EconomyService();
+        if (!economy.hook()) getLogger().warning("No Vault economy provider detected. Shop transactions will be unavailable until one is present.");
+
+        TransactionService transactions = new TransactionService(this, economy);
+        ShopGuiService gui = new ShopGuiService(this, catalog, transactions);
+
+        getCommand("shop").setExecutor(new ShopCommand(this, catalog, gui));
+        getCommand("sellall").setExecutor(new SellAllCommand(this, catalog, transactions));
+        getCommand("mshop").setExecutor(new AdminCommand(this, catalog));
+        getServer().getPluginManager().registerEvents(new ShopMenuListener(gui), this);
+        getLogger().info("MiraShop v" + getPluginMeta().getVersion() + " enabled with " + catalog.sections().size() + " preset sections.");
+    }
+
+    public void reloadAll() {
+        reloadConfig();
+        catalog.load();
+        economy.hook();
+    }
+
+    public String message(String key) {
+        return getConfig().getString("messages." + key, "&cMissing message: " + key);
+    }
+
+    public void msg(CommandSender sender, String message) {
+        sender.sendMessage(Text.c(getConfig().getString("messages.prefix", "&5[MiraShop] &r") + message));
+    }
+
+    public String money(double value) {
+        String symbol = getConfig().getString("currency.symbol", "$");
+        return symbol + money.format(Math.max(0D, value));
+    }
+}
