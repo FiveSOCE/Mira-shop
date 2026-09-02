@@ -73,6 +73,60 @@ public final class TransactionService {
         return count;
     }
 
+    public boolean sellPlayerSlot(Player player, int playerSlot) {
+        if (!player.hasPermission("mirashop.sell")) return false;
+        ItemStack stack = player.getInventory().getItem(playerSlot);
+        if (stack == null || stack.getType().isAir()) return false;
+        ShopItem item = plugin.catalog().findByMaterial(stack.getType()).orElse(null);
+        if (item == null || !isSellableStack(stack, item)) return false;
+        double total = safeTotal(item.sellPrice(), stack.getAmount());
+        if (total < 0D) return false;
+        ItemStack backup = stack.clone();
+        player.getInventory().setItem(playerSlot, null);
+        if (!economy.deposit(player, total)) {
+            player.getInventory().setItem(playerSlot, backup);
+            return false;
+        }
+        plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(backup.getAmount())).replace("%item%", pretty(backup.getType().name())).replace("%price%", plugin.money(total)));
+        return true;
+    }
+
+    public void sellEligibleInventory(Player player) {
+        double total = 0D;
+        int sold = 0;
+        ItemStack[] storage = player.getInventory().getStorageContents();
+        for (int i = 0; i < storage.length; i++) {
+            ItemStack stack = storage[i];
+            if (stack == null || stack.getType().isAir()) continue;
+            ShopItem item = plugin.catalog().findByMaterial(stack.getType()).orElse(null);
+            if (item == null || !isSellableStack(stack, item)) continue;
+            double value = safeTotal(item.sellPrice(), stack.getAmount());
+            if (value < 0D) continue;
+            total += value;
+            sold += stack.getAmount();
+            storage[i] = null;
+        }
+        if (sold == 0) {
+            plugin.msg(player, plugin.message("nothing-to-sell"));
+            return;
+        }
+        player.getInventory().setStorageContents(storage);
+        if (!economy.deposit(player, total)) return;
+        plugin.msg(player, "&aSold &f" + sold + "&a items for &f" + plugin.money(total) + "&a.");
+    }
+
+    public boolean isSellableStack(ItemStack stack, ShopItem item) {
+        if (stack == null || stack.getType() != item.material() || !item.canSell()) return false;
+        if (stack.hasItemMeta()) {
+            var meta = stack.getItemMeta();
+            if (meta.hasDisplayName() || meta.hasCustomName()) return false;
+            if (!meta.getPersistentDataContainer().isEmpty()) return false;
+            if (meta.hasEnchants() || meta.hasCustomModelData()) return false;
+            if (meta instanceof org.bukkit.inventory.meta.Damageable damageable && damageable.hasDamage()) return false;
+        }
+        return true;
+    }
+
     private void remove(Player player, ShopItem item, int amount) {
         int left = amount;
         ItemStack[] contents = player.getInventory().getStorageContents();
@@ -85,14 +139,6 @@ public final class TransactionService {
             left -= take;
         }
         player.getInventory().setStorageContents(contents);
-    }
-
-    private boolean isSellableStack(ItemStack stack, ShopItem item) {
-        if (stack == null || stack.getType() != item.material()) return false;
-        // Default shop entries represent plain vanilla items. Any metadata can carry
-        // enchantments, custom names, damage, model data, or Mira PDC tags, so it is
-        // deliberately excluded from material-only selling to protect custom items.
-        return !stack.hasItemMeta();
     }
 
     private boolean hasSpace(Player player, ItemStack adding) {
