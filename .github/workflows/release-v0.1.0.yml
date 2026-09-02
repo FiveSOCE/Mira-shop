@@ -1,0 +1,35 @@
+name: Release v0.1.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-v0.1.0.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10'
+      - name: Build
+        run: gradle clean build --stacktrace
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.1.0 \
+            build/libs/MiraShop-0.1.0.jar \
+            --target "${GITHUB_SHA}" \
+            --title "MiraShop v0.1.0" \
+            --notes "Initial MiraShop release with preset economy sections, Vault buy/sell transactions, quantity GUI, sell-all commands, section permissions and in-game admin price/item editing."
