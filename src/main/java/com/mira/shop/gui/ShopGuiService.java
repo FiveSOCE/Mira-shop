@@ -3,6 +3,7 @@ package com.mira.shop.gui;
 import com.mira.shop.MiraShopPlugin;
 import com.mira.shop.model.ShopItem;
 import com.mira.shop.model.ShopSection;
+import com.mira.shop.service.EconomyService;
 import com.mira.shop.service.ShopCatalog;
 import com.mira.shop.service.TransactionService;
 import com.mira.shop.util.Text;
@@ -17,37 +18,51 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class ShopGuiService {
+    private static final List<Integer> MAIN_SECTION_SLOTS = List.of(10, 11, 12, 13, 14, 15, 16);
+
     private final MiraShopPlugin plugin;
     private final ShopCatalog catalog;
     private final TransactionService transactions;
+    private final EconomyService economy;
 
-    public ShopGuiService(MiraShopPlugin plugin, ShopCatalog catalog, TransactionService transactions) {
-        this.plugin = plugin; this.catalog = catalog; this.transactions = transactions;
+    public ShopGuiService(MiraShopPlugin plugin, ShopCatalog catalog, TransactionService transactions, EconomyService economy) {
+        this.plugin = plugin;
+        this.catalog = catalog;
+        this.transactions = transactions;
+        this.economy = economy;
     }
 
     public void openMain(Player player) {
         ShopHolder holder = new ShopHolder(ShopHolder.Type.MAIN, "", "");
-        Inventory inv = Bukkit.createInventory(holder, 54, Text.c(plugin.getConfig().getString("shop.title", "&5Mira Shop")));
+        Inventory inv = Bukkit.createInventory(holder, 27, Text.c(plugin.getConfig().getString("shop.title", "&5Mira Shop")));
         holder.bind(inv);
+        fill(inv);
+
         List<ShopSection> visible = visibleSections(player);
-        for (int slot = 0; slot < visible.size() && slot < 45; slot++) {
-            ShopSection section = visible.get(slot);
-            inv.setItem(slot, button(section.icon(), section.displayName(), List.of("&7Click to browse")));
+        for (int i = 0; i < visible.size() && i < MAIN_SECTION_SLOTS.size(); i++) {
+            ShopSection section = visible.get(i);
+            inv.setItem(MAIN_SECTION_SLOTS.get(i), button(section.icon(), section.displayName(), List.of("&7Click to browse")));
         }
-        inv.setItem(49, button(Material.GOLD_INGOT, "&eBalance", List.of("&7Use your economy balance to buy items.")));
+
+        inv.setItem(22, button(Material.BARRIER, "&cClose", List.of()));
+        inv.setItem(26, button(Material.GOLD_INGOT, "&eBalance", List.of("&7Current balance: &f" + plugin.money(economy.balance(player)))));
         player.openInventory(inv);
     }
 
     public void openSection(Player player, ShopSection section) {
+        int rows = Math.max(3, Math.min(6, ((section.items().size() + 6) / 7) + 2));
+        int size = rows * 9;
         ShopHolder holder = new ShopHolder(ShopHolder.Type.SECTION, section.id(), "");
-        Inventory inv = Bukkit.createInventory(holder, 54, Text.c(section.displayName()));
+        Inventory inv = Bukkit.createInventory(holder, size, Text.c(section.displayName()));
         holder.bind(inv);
-        int slot = 0;
-        for (ShopItem item : section.items()) {
-            if (slot >= 45) break;
-            inv.setItem(slot++, display(item));
+        fill(inv);
+
+        List<Integer> slots = contentSlots(size);
+        for (int i = 0; i < section.items().size() && i < slots.size(); i++) {
+            inv.setItem(slots.get(i), display(section.items().get(i)));
         }
-        inv.setItem(49, button(Material.ARROW, "&cBack", List.of()));
+
+        inv.setItem(size - 5, button(Material.ARROW, "&cBack", List.of()));
         player.openInventory(inv);
     }
 
@@ -55,6 +70,8 @@ public final class ShopGuiService {
         ShopHolder holder = new ShopHolder(ShopHolder.Type.TRANSACTION, sectionId, item.id());
         Inventory inv = Bukkit.createInventory(holder, 27, Text.c("&5" + pretty(item.material().name())));
         holder.bind(inv);
+        fill(inv);
+
         inv.setItem(13, display(item));
         inv.setItem(10, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 1", List.of("&7Cost: &f" + price(item.buyPrice(), 1, item.canBuy()))));
         inv.setItem(11, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 16", List.of("&7Cost: &f" + price(item.buyPrice(), 16, item.canBuy()))));
@@ -68,18 +85,33 @@ public final class ShopGuiService {
 
     public void handle(Player player, ShopHolder holder, int slot) {
         if (holder.type() == ShopHolder.Type.MAIN) {
+            if (slot == 22) {
+                player.closeInventory();
+                return;
+            }
+            int index = MAIN_SECTION_SLOTS.indexOf(slot);
+            if (index < 0) return;
             List<ShopSection> visible = visibleSections(player);
-            if (slot < 0 || slot >= visible.size() || slot >= 45) return;
-            openSection(player, visible.get(slot));
+            if (index >= visible.size()) return;
+            openSection(player, visible.get(index));
             return;
         }
+
         if (holder.type() == ShopHolder.Type.SECTION) {
-            if (slot == 49) { openMain(player); return; }
             ShopSection section = catalog.section(holder.section()).orElse(null);
-            if (section == null || slot < 0 || slot >= section.items().size() || slot >= 45) return;
-            openTransaction(player, section.id(), section.items().get(slot));
+            if (section == null) return;
+            int backSlot = player.getOpenInventory().getTopInventory().getSize() - 5;
+            if (slot == backSlot) {
+                openMain(player);
+                return;
+            }
+            List<Integer> slots = contentSlots(player.getOpenInventory().getTopInventory().getSize());
+            int index = slots.indexOf(slot);
+            if (index < 0 || index >= section.items().size()) return;
+            openTransaction(player, section.id(), section.items().get(index));
             return;
         }
+
         ShopSection section = catalog.section(holder.section()).orElse(null);
         if (section == null) return;
         ShopItem item = section.items().stream().filter(x -> x.id().equals(holder.item())).findFirst().orElse(null);
@@ -103,6 +135,24 @@ public final class ShopGuiService {
             if (player.hasPermission("mirashop.section.*") || player.hasPermission("mirashop.section." + section.id())) visible.add(section);
         }
         return visible;
+    }
+
+    private List<Integer> contentSlots(int size) {
+        int rows = size / 9;
+        List<Integer> slots = new ArrayList<>();
+        for (int row = 1; row < rows - 1; row++) {
+            for (int col = 1; col <= 7; col++) slots.add(row * 9 + col);
+        }
+        return slots;
+    }
+
+    private void fill(Inventory inv) {
+        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = filler.getItemMeta();
+        meta.displayName(Text.c(" "));
+        meta.setEnchantmentGlintOverride(true);
+        filler.setItemMeta(meta);
+        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, filler);
     }
 
     private String price(double unit, int amount, boolean enabled) {
