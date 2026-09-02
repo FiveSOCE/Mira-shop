@@ -1,0 +1,21 @@
+currency:
+  symbol: "$"
+  decimals: 2
+
+shop:
+  title: "&5Mira Shop"
+  buy-confirmation: true
+  sell-confirmation: true
+  close-after-transaction: false
+  quantity-steps: [1, 16, 32, 64]
+
+messages:
+  prefix: "&5[MiraShop] &r"
+  no-permission: "&cYou do not have permission to do that."
+  economy-missing: "&cNo Vault economy provider is available."
+  bought: "&aBought &f%amount%x %item% &afor &f%price%&a."
+  sold: "&aSold &f%amount%x %item% &afor &f%price%&a."
+  insufficient-funds: "&cYou do not have enough money."
+  inventory-full: "&cYou do not have enough inventory space."
+  nothing-to-sell: "&cYou do not have anything matching that shop item to sell."
+  reloaded: "&aMiraShop reloaded."
