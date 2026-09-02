@@ -30,7 +30,7 @@ public final class MiraShopPlugin extends JavaPlugin {
         if (!economy.hook()) getLogger().warning("No Vault economy provider detected. Shop transactions will be unavailable until one is present.");
 
         TransactionService transactions = new TransactionService(this, economy);
-        ShopGuiService gui = new ShopGuiService(this, catalog, transactions);
+        ShopGuiService gui = new ShopGuiService(this, catalog, transactions, economy);
         AdminGuiService adminGui = new AdminGuiService(this, catalog);
 
         getCommand("shop").setExecutor(new ShopCommand(this, catalog, gui));
