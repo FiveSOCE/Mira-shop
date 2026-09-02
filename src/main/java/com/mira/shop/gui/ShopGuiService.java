@@ -37,15 +37,12 @@ public final class ShopGuiService {
         Inventory inv = Bukkit.createInventory(holder, 27, Text.c(plugin.getConfig().getString("shop.title", "&5Mira Shop")));
         holder.bind(inv);
         fill(inv);
-
         List<ShopSection> visible = visibleSections(player);
         for (int i = 0; i < visible.size() && i < MAIN_SECTION_SLOTS.size(); i++) {
             ShopSection section = visible.get(i);
             inv.setItem(MAIN_SECTION_SLOTS.get(i), button(section.icon(), section.displayName(), List.of("&7Click to browse")));
         }
-
-        inv.setItem(22, button(Material.BARRIER, "&cClose", List.of()));
-        inv.setItem(26, button(Material.GOLD_INGOT, "&eBalance", List.of("&7Current balance: &f" + plugin.money(economy.balance(player)))));
+        inv.setItem(22, button(Material.GOLD_INGOT, "&eBalance", List.of("&7Current balance: &f" + plugin.money(economy.balance(player)))));
         player.openInventory(inv);
     }
 
@@ -56,12 +53,8 @@ public final class ShopGuiService {
         Inventory inv = Bukkit.createInventory(holder, size, Text.c(section.displayName()));
         holder.bind(inv);
         fill(inv);
-
         List<Integer> slots = contentSlots(size);
-        for (int i = 0; i < section.items().size() && i < slots.size(); i++) {
-            inv.setItem(slots.get(i), display(section.items().get(i)));
-        }
-
+        for (int i = 0; i < section.items().size() && i < slots.size(); i++) inv.setItem(slots.get(i), display(section.items().get(i)));
         inv.setItem(size - 5, button(Material.ARROW, "&cBack", List.of()));
         player.openInventory(inv);
     }
@@ -71,7 +64,6 @@ public final class ShopGuiService {
         Inventory inv = Bukkit.createInventory(holder, 27, Text.c("&5" + pretty(item.material().name())));
         holder.bind(inv);
         fill(inv);
-
         inv.setItem(13, display(item));
         inv.setItem(10, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 1", List.of("&7Cost: &f" + price(item.buyPrice(), 1, item.canBuy()))));
         inv.setItem(11, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 16", List.of("&7Cost: &f" + price(item.buyPrice(), 16, item.canBuy()))));
@@ -85,33 +77,22 @@ public final class ShopGuiService {
 
     public void handle(Player player, ShopHolder holder, int slot) {
         if (holder.type() == ShopHolder.Type.MAIN) {
-            if (slot == 22) {
-                player.closeInventory();
-                return;
-            }
             int index = MAIN_SECTION_SLOTS.indexOf(slot);
             if (index < 0) return;
             List<ShopSection> visible = visibleSections(player);
-            if (index >= visible.size()) return;
-            openSection(player, visible.get(index));
+            if (index < visible.size()) openSection(player, visible.get(index));
             return;
         }
-
         if (holder.type() == ShopHolder.Type.SECTION) {
             ShopSection section = catalog.section(holder.section()).orElse(null);
             if (section == null) return;
             int backSlot = player.getOpenInventory().getTopInventory().getSize() - 5;
-            if (slot == backSlot) {
-                openMain(player);
-                return;
-            }
+            if (slot == backSlot) { openMain(player); return; }
             List<Integer> slots = contentSlots(player.getOpenInventory().getTopInventory().getSize());
             int index = slots.indexOf(slot);
-            if (index < 0 || index >= section.items().size()) return;
-            openTransaction(player, section.id(), section.items().get(index));
+            if (index >= 0 && index < section.items().size()) openTransaction(player, section.id(), section.items().get(index));
             return;
         }
-
         ShopSection section = catalog.section(holder.section()).orElse(null);
         if (section == null) return;
         ShopItem item = section.items().stream().filter(x -> x.id().equals(holder.item())).findFirst().orElse(null);
@@ -131,18 +112,14 @@ public final class ShopGuiService {
 
     private List<ShopSection> visibleSections(Player player) {
         List<ShopSection> visible = new ArrayList<>();
-        for (ShopSection section : catalog.sections()) {
-            if (player.hasPermission("mirashop.section.*") || player.hasPermission("mirashop.section." + section.id())) visible.add(section);
-        }
+        for (ShopSection section : catalog.sections()) if (player.hasPermission("mirashop.section.*") || player.hasPermission("mirashop.section." + section.id())) visible.add(section);
         return visible;
     }
 
     private List<Integer> contentSlots(int size) {
         int rows = size / 9;
         List<Integer> slots = new ArrayList<>();
-        for (int row = 1; row < rows - 1; row++) {
-            for (int col = 1; col <= 7; col++) slots.add(row * 9 + col);
-        }
+        for (int row = 1; row < rows - 1; row++) for (int col = 1; col <= 7; col++) slots.add(row * 9 + col);
         return slots;
     }
 
@@ -155,33 +132,8 @@ public final class ShopGuiService {
         for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, filler);
     }
 
-    private String price(double unit, int amount, boolean enabled) {
-        return enabled ? plugin.money(unit * amount) : "Disabled";
-    }
-
-    private ItemStack display(ShopItem item) {
-        return button(item.material(), "&f" + pretty(item.material().name()), List.of(
-                item.canBuy() ? "&aBuy: &f" + plugin.money(item.buyPrice()) : "&cNot purchasable",
-                item.canSell() ? "&cSell: &f" + plugin.money(item.sellPrice()) : "&7Not sellable",
-                "", "&eClick to trade"
-        ));
-    }
-
-    private static ItemStack button(Material material, String name, List<String> lore) {
-        ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        meta.displayName(Text.c(name));
-        meta.lore(lore.stream().map(Text::c).toList());
-        item.setItemMeta(meta);
-        return item;
-    }
-
-    private static String pretty(String input) {
-        StringBuilder out = new StringBuilder();
-        for (String part : input.toLowerCase().split("_")) {
-            if (!out.isEmpty()) out.append(' ');
-            out.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
-        }
-        return out.toString();
-    }
+    private String price(double unit, int amount, boolean enabled) { return enabled ? plugin.money(unit * amount) : "Disabled"; }
+    private ItemStack display(ShopItem item) { return button(item.material(), "&f" + pretty(item.material().name()), List.of(item.canBuy() ? "&aBuy: &f" + plugin.money(item.buyPrice()) : "&cNot purchasable", item.canSell() ? "&cSell: &f" + plugin.money(item.sellPrice()) : "&7Not sellable", "", "&eClick to trade")); }
+    private static ItemStack button(Material material, String name, List<String> lore) { ItemStack item = new ItemStack(material); ItemMeta meta = item.getItemMeta(); meta.displayName(Text.c(name)); meta.lore(lore.stream().map(Text::c).toList()); item.setItemMeta(meta); return item; }
+    private static String pretty(String input) { StringBuilder out = new StringBuilder(); for (String part : input.toLowerCase().split("_")) { if (!out.isEmpty()) out.append(' '); out.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1)); } return out.toString(); }
 }
