@@ -49,21 +49,15 @@ public final class TransactionService {
             return false;
         }
         double total = safeTotal(item.sellPrice(), amount);
-        if (total < 0D) return false;
+        if (total < 0D || !economy.deposit(player, total)) return false;
         remove(player, item, amount);
-        if (!economy.deposit(player, total)) {
-            player.getInventory().addItem(new ItemStack(item.material(), amount));
-            return false;
-        }
         plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(amount)).replace("%item%", pretty(item.material().name())).replace("%price%", plugin.money(total)));
         return true;
     }
 
     public int count(Player player, ShopItem item) {
         int count = 0;
-        for (ItemStack stack : player.getInventory().getStorageContents()) {
-            if (isSellableStack(stack, item)) count += stack.getAmount();
-        }
+        for (ItemStack stack : player.getInventory().getStorageContents()) if (isSellableStack(stack, item)) count += stack.getAmount();
         return count;
     }
 
@@ -80,23 +74,21 @@ public final class TransactionService {
         ShopItem item = plugin.catalog().findByMaterial(stack.getType()).orElse(null);
         if (item == null || !isSellableStack(stack, item)) return false;
         double total = safeTotal(item.sellPrice(), stack.getAmount());
-        if (total < 0D) return false;
-        ItemStack backup = stack.clone();
+        if (total < 0D || !economy.deposit(player, total)) return false;
+        ItemStack sold = stack.clone();
         player.getInventory().setItem(playerSlot, null);
-        if (!economy.deposit(player, total)) {
-            player.getInventory().setItem(playerSlot, backup);
-            return false;
-        }
-        plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(backup.getAmount())).replace("%item%", pretty(backup.getType().name())).replace("%price%", plugin.money(total)));
+        plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(sold.getAmount())).replace("%item%", pretty(sold.getType().name())).replace("%price%", plugin.money(total)));
         return true;
     }
 
     public void sellEligibleInventory(Player player) {
+        if (!player.hasPermission("mirashop.sell")) return;
         double total = 0D;
         int sold = 0;
-        ItemStack[] storage = player.getInventory().getStorageContents();
-        for (int i = 0; i < storage.length; i++) {
-            ItemStack stack = storage[i];
+        ItemStack[] original = player.getInventory().getStorageContents();
+        ItemStack[] result = original.clone();
+        for (int i = 0; i < original.length; i++) {
+            ItemStack stack = original[i];
             if (stack == null || stack.getType().isAir()) continue;
             ShopItem item = plugin.catalog().findByMaterial(stack.getType()).orElse(null);
             if (item == null || !isSellableStack(stack, item)) continue;
@@ -104,14 +96,14 @@ public final class TransactionService {
             if (value < 0D) continue;
             total += value;
             sold += stack.getAmount();
-            storage[i] = null;
+            result[i] = null;
         }
         if (sold == 0) {
             plugin.msg(player, plugin.message("nothing-to-sell"));
             return;
         }
-        player.getInventory().setStorageContents(storage);
         if (!economy.deposit(player, total)) return;
+        player.getInventory().setStorageContents(result);
         plugin.msg(player, "&aSold &f" + sold + "&a items for &f" + plugin.money(total) + "&a.");
     }
 
