@@ -4,17 +4,24 @@ import com.mira.shop.command.AdminCommand;
 import com.mira.shop.command.SellAllCommand;
 import com.mira.shop.command.ShopCommand;
 import com.mira.shop.gui.AdminGuiService;
+import com.mira.shop.gui.SellGuiService;
 import com.mira.shop.gui.ShopGuiService;
 import com.mira.shop.listener.AdminMenuListener;
+import com.mira.shop.listener.SellGuiListener;
 import com.mira.shop.listener.ShopMenuListener;
 import com.mira.shop.service.EconomyService;
 import com.mira.shop.service.ShopCatalog;
 import com.mira.shop.service.TransactionService;
 import com.mira.shop.util.Text;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.text.DecimalFormat;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 public final class MiraShopPlugin extends JavaPlugin {
     private final DecimalFormat money = new DecimalFormat("0.00");
@@ -31,13 +38,17 @@ public final class MiraShopPlugin extends JavaPlugin {
 
         TransactionService transactions = new TransactionService(this, economy);
         ShopGuiService gui = new ShopGuiService(this, catalog, transactions, economy);
+        SellGuiService sellGui = new SellGuiService(this, catalog, transactions);
         AdminGuiService adminGui = new AdminGuiService(this, catalog);
 
         getCommand("shop").setExecutor(new ShopCommand(this, catalog, gui));
         getCommand("sellall").setExecutor(new SellAllCommand(this, catalog, transactions));
         getCommand("mshop").setExecutor(new AdminCommand(this, catalog, adminGui));
         getServer().getPluginManager().registerEvents(new ShopMenuListener(gui), this);
+        getServer().getPluginManager().registerEvents(new SellGuiListener(sellGui), this);
         getServer().getPluginManager().registerEvents(new AdminMenuListener(adminGui), this);
+
+        Bukkit.getScheduler().runTask(this, this::syncEssentialsWorth);
         getLogger().info("MiraShop v" + getPluginMeta().getVersion() + " enabled with " + catalog.sections().size() + " preset sections.");
     }
 
@@ -45,6 +56,18 @@ public final class MiraShopPlugin extends JavaPlugin {
         reloadConfig();
         catalog.load();
         economy.hook();
+        Bukkit.getScheduler().runTask(this, this::syncEssentialsWorth);
+    }
+
+    public ShopCatalog catalog() { return catalog; }
+
+    public void syncEssentialsWorth() {
+        if (Bukkit.getPluginManager().getPlugin("Essentials") == null) return;
+        Set<Material> synced = new HashSet<>();
+        catalog.sections().forEach(section -> section.items().forEach(item -> {
+            if (!item.canSell() || !synced.add(item.material())) return;
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "setworth " + item.material().name().toLowerCase(Locale.ROOT) + " " + item.sellPrice());
+        }));
     }
 
     public String message(String key) {
