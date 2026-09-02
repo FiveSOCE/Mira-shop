@@ -1,5 +1,5 @@
 name: MiraShop
-version: 0.1.0
+version: 0.1.1
 main: com.mira.shop.MiraShopPlugin
 api-version: '1.21'
 authors: [FiveS]
@@ -16,7 +16,7 @@ commands:
     permission: mirashop.sellall
   mshop:
     description: MiraShop administration.
-    usage: /mshop [reload|edit]
+    usage: /mshop [edit|reload|setprice|addhand|remove]
     permission: mirashop.admin
 permissions:
   mirashop.use:
