@@ -11,6 +11,8 @@ import java.io.File;
 import java.util.*;
 
 public final class ShopCatalog {
+    private static final Set<String> REMOVED_SECTIONS = Set.of("tools", "armor", "brewing", "misc");
+
     private final MiraShopPlugin plugin;
     private final Map<String, ShopSection> sections = new LinkedHashMap<>();
     private File file;
@@ -25,10 +27,14 @@ public final class ShopCatalog {
         file = new File(plugin.getDataFolder(), "shops.yml");
         if (!file.exists()) plugin.saveResource("shops.yml", false);
         yaml = YamlConfiguration.loadConfiguration(file);
+        migrateSections();
+
         sections.clear();
         ConfigurationSection root = yaml.getConfigurationSection("sections");
         if (root == null) return;
         for (String sectionId : root.getKeys(false)) {
+            String normalized = sectionId.toLowerCase(Locale.ROOT);
+            if (REMOVED_SECTIONS.contains(normalized)) continue;
             ConfigurationSection sec = root.getConfigurationSection(sectionId);
             if (sec == null) continue;
             Material icon = Material.matchMaterial(sec.getString("icon", "CHEST"));
@@ -46,8 +52,27 @@ public final class ShopCatalog {
                     items.add(new ShopItem(itemId.toLowerCase(Locale.ROOT), material, buy, sell));
                 }
             }
-            sections.put(sectionId.toLowerCase(Locale.ROOT), new ShopSection(sectionId.toLowerCase(Locale.ROOT), sec.getString("name", sectionId), icon, List.copyOf(items)));
+            sections.put(normalized, new ShopSection(normalized, sec.getString("name", sectionId), icon, List.copyOf(items)));
         }
+    }
+
+    private void migrateSections() {
+        boolean changed = false;
+        for (String removed : REMOVED_SECTIONS) {
+            if (yaml.contains("sections." + removed)) {
+                yaml.set("sections." + removed, null);
+                changed = true;
+            }
+        }
+        if (!yaml.contains("sections.spawners")) {
+            yaml.set("sections.spawners.name", "&5Spawners");
+            yaml.set("sections.spawners.icon", "SPAWNER");
+            yaml.set("sections.spawners.items.spawner.material", "SPAWNER");
+            yaml.set("sections.spawners.items.spawner.buy", -1D);
+            yaml.set("sections.spawners.items.spawner.sell", -1D);
+            changed = true;
+        }
+        if (changed) saveYaml();
     }
 
     public Collection<ShopSection> sections() { return Collections.unmodifiableCollection(sections.values()); }
@@ -65,6 +90,7 @@ public final class ShopCatalog {
         if (root == null) return 0;
         int changed = 0;
         for (String sectionId : root.getKeys(false)) {
+            if (REMOVED_SECTIONS.contains(sectionId.toLowerCase(Locale.ROOT))) continue;
             ConfigurationSection itemRoot = root.getConfigurationSection(sectionId + ".items");
             if (itemRoot == null) continue;
             for (String itemId : itemRoot.getKeys(false)) {
@@ -100,8 +126,12 @@ public final class ShopCatalog {
         saveAndReload();
     }
 
-    private void saveAndReload() {
+    private void saveYaml() {
         try { yaml.save(file); } catch (Exception ex) { throw new IllegalStateException("Failed to save shops.yml", ex); }
+    }
+
+    private void saveAndReload() {
+        saveYaml();
         load();
     }
 }
