@@ -1,8 +1,8 @@
 package com.mira.shop.command;
 
 import com.mira.shop.MiraShopPlugin;
+import com.mira.shop.gui.AdminGuiService;
 import com.mira.shop.service.ShopCatalog;
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,19 +15,23 @@ import java.util.Locale;
 public final class AdminCommand implements CommandExecutor {
     private final MiraShopPlugin plugin;
     private final ShopCatalog catalog;
+    private final AdminGuiService adminGui;
 
-    public AdminCommand(MiraShopPlugin plugin, ShopCatalog catalog) {
-        this.plugin = plugin; this.catalog = catalog;
+    public AdminCommand(MiraShopPlugin plugin, ShopCatalog catalog, AdminGuiService adminGui) {
+        this.plugin = plugin; this.catalog = catalog; this.adminGui = adminGui;
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!sender.hasPermission("mirashop.admin")) { plugin.msg(sender, plugin.message("no-permission")); return true; }
         if (args.length == 0) {
-            plugin.msg(sender, "&e/mshop reload");
-            plugin.msg(sender, "&e/mshop setprice <section> <item> <buy|sell> <price|-1>");
-            plugin.msg(sender, "&e/mshop addhand <section> <id> <buy> <sell>");
-            plugin.msg(sender, "&e/mshop remove <section> <item>");
+            if (sender instanceof Player player) adminGui.openSections(player);
+            else printHelp(sender);
+            return true;
+        }
+        if (args[0].equalsIgnoreCase("edit")) {
+            if (sender instanceof Player player) adminGui.openSections(player);
+            else plugin.msg(sender, "&cThe GUI editor is player-only.");
             return true;
         }
         if (args[0].equalsIgnoreCase("reload")) {
@@ -67,7 +71,15 @@ public final class AdminCommand implements CommandExecutor {
             plugin.msg(sender, "&cInvalid shop edit input.");
             return true;
         }
-        plugin.msg(sender, "&cUnknown MiraShop admin command.");
+        printHelp(sender);
         return true;
+    }
+
+    private void printHelp(CommandSender sender) {
+        plugin.msg(sender, "&e/mshop edit");
+        plugin.msg(sender, "&e/mshop reload");
+        plugin.msg(sender, "&e/mshop setprice <section> <item> <buy|sell> <price|-1>");
+        plugin.msg(sender, "&e/mshop addhand <section> <id> <buy> <sell>");
+        plugin.msg(sender, "&e/mshop remove <section> <item>");
     }
 }
