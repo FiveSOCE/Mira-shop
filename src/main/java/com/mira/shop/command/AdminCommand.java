@@ -3,6 +3,8 @@ package com.mira.shop.command;
 import com.mira.shop.MiraShopPlugin;
 import com.mira.shop.gui.AdminGuiService;
 import com.mira.shop.service.ShopCatalog;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -40,6 +42,31 @@ public final class AdminCommand implements CommandExecutor {
             return true;
         }
         try {
+            if (args[0].equalsIgnoreCase("setprice") && args.length == 2 && sender instanceof Player player) {
+                ItemStack hand = player.getInventory().getItemInMainHand();
+                if (hand.getType().isAir()) {
+                    plugin.msg(sender, "&cHold the shop item you want to price first.");
+                    return true;
+                }
+                double value = Double.parseDouble(args[1]);
+                if (!Double.isFinite(value) || value < 0D) throw new IllegalArgumentException();
+
+                Material material = hand.getType();
+                int changed = catalog.setPriceByMaterial(material, value);
+                if (changed == 0) {
+                    plugin.msg(sender, "&c" + pretty(material.name()) + " is not currently configured in Mira-Shop.");
+                    return true;
+                }
+
+                boolean essentialsUpdated = Bukkit.dispatchCommand(
+                        Bukkit.getConsoleSender(),
+                        "essentials:setworth " + material.name().toLowerCase(Locale.ROOT) + " " + value
+                );
+
+                plugin.msg(sender, "&aSet &f" + pretty(material.name()) + "&a to &f" + plugin.money(value)
+                        + "&a in Mira-Shop" + (essentialsUpdated ? " and Essentials worth." : ". &eEssentials worth could not be updated."));
+                return true;
+            }
             if (args[0].equalsIgnoreCase("setprice") && args.length >= 5) {
                 String section = args[1].toLowerCase(Locale.ROOT);
                 String item = args[2].toLowerCase(Locale.ROOT);
@@ -78,8 +105,18 @@ public final class AdminCommand implements CommandExecutor {
     private void printHelp(CommandSender sender) {
         plugin.msg(sender, "&e/mshop edit");
         plugin.msg(sender, "&e/mshop reload");
+        plugin.msg(sender, "&e/mshop setprice <price> &7(hold the item)");
         plugin.msg(sender, "&e/mshop setprice <section> <item> <buy|sell> <price|-1>");
         plugin.msg(sender, "&e/mshop addhand <section> <id> <buy> <sell>");
         plugin.msg(sender, "&e/mshop remove <section> <item>");
+    }
+
+    private static String pretty(String input) {
+        StringBuilder out = new StringBuilder();
+        for (String part : input.toLowerCase(Locale.ROOT).split("_")) {
+            if (!out.isEmpty()) out.append(' ');
+            out.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
+        }
+        return out.toString();
     }
 }
