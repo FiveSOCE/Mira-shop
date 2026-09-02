@@ -19,16 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class AdminGuiService {
     public enum Awaiting { BUY, SELL }
-
     private record Pending(String section, String item, Awaiting type) {}
 
     private final MiraShopPlugin plugin;
     private final ShopCatalog catalog;
     private final Map<UUID, Pending> pending = new ConcurrentHashMap<>();
 
-    public AdminGuiService(MiraShopPlugin plugin, ShopCatalog catalog) {
-        this.plugin = plugin; this.catalog = catalog;
-    }
+    public AdminGuiService(MiraShopPlugin plugin, ShopCatalog catalog) { this.plugin = plugin; this.catalog = catalog; }
 
     public void openSections(Player player) {
         AdminHolder holder = new AdminHolder(AdminHolder.Type.SECTIONS, "", "");
@@ -87,6 +84,7 @@ public final class AdminGuiService {
                 if (hand.getType().isAir()) { plugin.msg(player, "&cHold the item you want to add first."); return; }
                 String id = hand.getType().name().toLowerCase();
                 catalog.addHandItem(section.id(), id, hand.getType(), -1D, -1D);
+                plugin.syncEssentialsWorth();
                 openItems(player, catalog.section(section.id()).orElse(section));
                 return;
             }
@@ -123,6 +121,7 @@ public final class AdminGuiService {
             if (!Double.isFinite(value) || value < -1D) throw new NumberFormatException();
             if (edit.type() == Awaiting.BUY) catalog.setPrice(edit.section(), edit.item(), value, null);
             else catalog.setPrice(edit.section(), edit.item(), null, value);
+            plugin.syncEssentialsWorth();
             plugin.msg(player, "&aPrice updated.");
         } catch (NumberFormatException ex) {
             plugin.msg(player, "&cInvalid price. Enter a number or -1 to disable.");
@@ -134,11 +133,7 @@ public final class AdminGuiService {
     }
 
     private ItemStack itemButton(ShopItem item) {
-        return button(item.material(), "&f" + item.material().name(), List.of(
-                "&aBuy: &f" + (item.canBuy() ? plugin.money(item.buyPrice()) : "Disabled"),
-                "&cSell: &f" + (item.canSell() ? plugin.money(item.sellPrice()) : "Disabled"),
-                "", "&eClick to edit"
-        ));
+        return button(item.material(), "&f" + item.material().name(), List.of("&aBuy: &f" + (item.canBuy() ? plugin.money(item.buyPrice()) : "Disabled"), "&cSell: &f" + (item.canSell() ? plugin.money(item.sellPrice()) : "Disabled"), "", "&eClick to edit"));
     }
 
     private static ItemStack button(Material material, String name, List<String> lore) {
