@@ -4,9 +4,9 @@ MiraShop is the first-party GUI economy shop for the Mira Minecraft plugin suite
 
 ## Download
 
-**Current release: v0.1.0**
+**Current release: v0.1.1**
 
-[Download MiraShop-0.1.0.jar](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.0/MiraShop-0.1.0.jar)
+[Download MiraShop-0.1.1.jar](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.1/MiraShop-0.1.1.jar)
 
 [View all releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
@@ -21,9 +21,9 @@ MiraShop is the first-party GUI economy shop for the Mira Minecraft plugin suite
 
 - `/shop` - open the main shop
 - `/shop <section>` - open a section directly
-- `/sellall hand` - sell all sellable copies of the held material
-- `/sellall inventory` - sell all sellable shop materials in your inventory
-- `/sellall <material>` - sell all copies of one material
+- `/sellall hand` - sell all sellable plain copies of the held material
+- `/sellall inventory` - sell all sellable plain shop materials in your inventory
+- `/sellall <material>` - sell all plain copies of one material
 
 ## Shop GUI
 
@@ -50,20 +50,32 @@ The item trade screen supports:
 - Sell 1
 - Sell 16
 - Sell All
-- Live owned-item count
+- Live sellable-item count
 
 Items may be buy-only, sell-only, or both. A price of `-1` disables that side of the transaction.
 
-## Admin commands
+## In-game editor
 
 Permission: `mirashop.admin`
+
+Run `/mshop` or `/mshop edit` to open the editor GUI.
+
+The editor lets admins:
+
+- Browse every shop section
+- Browse and edit section items
+- Change buy price through chat input
+- Change sell price through chat input
+- Disable buying/selling with `-1`
+- Add the held material directly to a section
+- Remove shop entries
+
+Admin command fallbacks are also available:
 
 - `/mshop reload`
 - `/mshop setprice <section> <item> <buy|sell> <price|-1>`
 - `/mshop addhand <section> <id> <buy> <sell>`
 - `/mshop remove <section> <item>`
-
-`/mshop addhand` uses the material currently held by the administrator and writes the new item directly into `shops.yml`.
 
 ## Permissions
 
@@ -82,6 +94,8 @@ Permission: `mirashop.admin`
 
 ## Safety
 
-MiraShop validates prices before transactions, rejects invalid/negative buy values, checks money before withdrawal, verifies inventory capacity before a purchase, and restores money/items if an economy or delivery operation fails.
+MiraShop validates prices before transactions, rejects invalid buy values, checks money before withdrawal, verifies inventory capacity before a purchase, and restores money/items if an economy or delivery operation fails.
 
-Build output: `build/libs/MiraShop-0.1.0.jar`
+Material-only selling deliberately excludes items containing item metadata. That prevents enchanted, named, damaged, custom-model and Mira PDC-tagged items from being accidentally sold as ordinary vanilla shop stock.
+
+Build output: `build/libs/MiraShop-0.1.1.jar`
