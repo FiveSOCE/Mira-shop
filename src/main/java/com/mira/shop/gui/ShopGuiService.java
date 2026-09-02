@@ -13,6 +13,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class ShopGuiService {
@@ -26,14 +27,14 @@ public final class ShopGuiService {
 
     public void openMain(Player player) {
         ShopHolder holder = new ShopHolder(ShopHolder.Type.MAIN, "", "");
-        Inventory inv = Bukkit.createInventory(holder, 27, Text.c(plugin.getConfig().getString("shop.title", "&5Mira Shop")));
+        Inventory inv = Bukkit.createInventory(holder, 54, Text.c(plugin.getConfig().getString("shop.title", "&5Mira Shop")));
         holder.bind(inv);
-        int slot = 9;
-        for (ShopSection section : catalog.sections()) {
-            if (!player.hasPermission("mirashop.section.*") && !player.hasPermission("mirashop.section." + section.id())) continue;
-            inv.setItem(slot++, button(section.icon(), section.displayName(), List.of("&7Click to browse")));
-            if (slot >= 18) break;
+        List<ShopSection> visible = visibleSections(player);
+        for (int slot = 0; slot < visible.size() && slot < 45; slot++) {
+            ShopSection section = visible.get(slot);
+            inv.setItem(slot, button(section.icon(), section.displayName(), List.of("&7Click to browse")));
         }
+        inv.setItem(49, button(Material.GOLD_INGOT, "&eBalance", List.of("&7Use your economy balance to buy items.")));
         player.openInventory(inv);
     }
 
@@ -55,28 +56,27 @@ public final class ShopGuiService {
         Inventory inv = Bukkit.createInventory(holder, 27, Text.c("&5" + pretty(item.material().name())));
         holder.bind(inv);
         inv.setItem(13, display(item));
-        inv.setItem(10, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 1", List.of("&7Cost: &f" + plugin.money(item.buyPrice()))));
-        inv.setItem(11, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 16", List.of("&7Cost: &f" + plugin.money(item.buyPrice() * 16))));
-        inv.setItem(12, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 64", List.of("&7Cost: &f" + plugin.money(item.buyPrice() * 64))));
-        inv.setItem(14, button(Material.RED_STAINED_GLASS_PANE, "&cSell 1", List.of("&7Value: &f" + plugin.money(item.sellPrice()))));
-        inv.setItem(15, button(Material.RED_STAINED_GLASS_PANE, "&cSell 16", List.of("&7Value: &f" + plugin.money(item.sellPrice() * 16))));
-        inv.setItem(16, button(Material.RED_STAINED_GLASS_PANE, "&cSell All", List.of("&7You have: &f" + transactions.count(player, item))));
+        inv.setItem(10, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 1", List.of("&7Cost: &f" + price(item.buyPrice(), 1, item.canBuy()))));
+        inv.setItem(11, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 16", List.of("&7Cost: &f" + price(item.buyPrice(), 16, item.canBuy()))));
+        inv.setItem(12, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 64", List.of("&7Cost: &f" + price(item.buyPrice(), 64, item.canBuy()))));
+        inv.setItem(14, button(Material.RED_STAINED_GLASS_PANE, "&cSell 1", List.of("&7Value: &f" + price(item.sellPrice(), 1, item.canSell()))));
+        inv.setItem(15, button(Material.RED_STAINED_GLASS_PANE, "&cSell 16", List.of("&7Value: &f" + price(item.sellPrice(), 16, item.canSell()))));
+        inv.setItem(16, button(Material.RED_STAINED_GLASS_PANE, "&cSell All", List.of("&7You have sellable: &f" + transactions.count(player, item))));
         inv.setItem(22, button(Material.ARROW, "&cBack", List.of()));
         player.openInventory(inv);
     }
 
     public void handle(Player player, ShopHolder holder, int slot) {
         if (holder.type() == ShopHolder.Type.MAIN) {
-            int index = slot - 9;
-            if (index < 0) return;
-            int i = 0;
-            for (ShopSection section : catalog.sections()) if (i++ == index) { openSection(player, section); return; }
+            List<ShopSection> visible = visibleSections(player);
+            if (slot < 0 || slot >= visible.size() || slot >= 45) return;
+            openSection(player, visible.get(slot));
             return;
         }
         if (holder.type() == ShopHolder.Type.SECTION) {
             if (slot == 49) { openMain(player); return; }
             ShopSection section = catalog.section(holder.section()).orElse(null);
-            if (section == null || slot < 0 || slot >= section.items().size()) return;
+            if (section == null || slot < 0 || slot >= section.items().size() || slot >= 45) return;
             openTransaction(player, section.id(), section.items().get(slot));
             return;
         }
@@ -95,6 +95,18 @@ public final class ShopGuiService {
             default -> { return; }
         }
         if (slot != 22) openTransaction(player, section.id(), item);
+    }
+
+    private List<ShopSection> visibleSections(Player player) {
+        List<ShopSection> visible = new ArrayList<>();
+        for (ShopSection section : catalog.sections()) {
+            if (player.hasPermission("mirashop.section.*") || player.hasPermission("mirashop.section." + section.id())) visible.add(section);
+        }
+        return visible;
+    }
+
+    private String price(double unit, int amount, boolean enabled) {
+        return enabled ? plugin.money(unit * amount) : "Disabled";
     }
 
     private ItemStack display(ShopItem item) {
