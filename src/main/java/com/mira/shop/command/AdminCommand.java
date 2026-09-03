@@ -15,6 +15,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -52,6 +56,10 @@ public final class AdminCommand implements CommandExecutor {
         }
         if (args[0].equalsIgnoreCase("eco")) {
             showSpawnerEconomy(sender);
+            return true;
+        }
+        if (args[0].equalsIgnoreCase("export")) {
+            exportEconomy(sender);
             return true;
         }
         try {
@@ -171,6 +179,34 @@ public final class AdminCommand implements CommandExecutor {
         plugin.msg(sender, "&7Tune estimator: &feco.estimated-kills-per-hour-per-spawner&7 in config.yml.");
     }
 
+    private void exportEconomy(CommandSender sender) {
+        File directory = new File(plugin.getDataFolder(), "exports");
+        if (!directory.exists() && !directory.mkdirs()) {
+            plugin.msg(sender, "&cCould not create the MiraShop exports folder.");
+            return;
+        }
+        String stamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new java.util.Date());
+        File file = new File(directory, "economy-" + stamp + ".csv");
+        Map<String, EconomyStatsService.ItemStats> stats = new LinkedHashMap<>();
+        for (EconomyStatsService.ItemStats stat : plugin.stats().allTime()) stats.put(stat.itemId(), stat);
+        try (PrintWriter out = new PrintWriter(file, StandardCharsets.UTF_8)) {
+            out.println("section,item_id,material,buy_price,sell_price,mode,units_bought,money_spent,units_sold,money_created,net_injection");
+            for (ShopSection section : catalog.sections()) {
+                for (ShopItem item : section.items()) {
+                    EconomyStatsService.ItemStats stat = stats.getOrDefault(item.id(), new EconomyStatsService.ItemStats(item.id(), 0, 0D, 0, 0D));
+                    String mode = item.canBuy() && item.canSell() ? "BUY_SELL" : item.canBuy() ? "BUY_ONLY" : item.canSell() ? "SELL_ONLY" : "DISABLED";
+                    out.printf(Locale.US, "%s,%s,%s,%.2f,%.2f,%s,%d,%.2f,%d,%.2f,%.2f%n",
+                            csv(section.id()), csv(item.id()), csv(item.material().name()), item.buyPrice(), item.sellPrice(), mode,
+                            stat.unitsBought(), stat.moneySpent(), stat.unitsSold(), stat.moneyCreated(), stat.netInjection());
+                }
+            }
+        } catch (Exception ex) {
+            plugin.msg(sender, "&cEconomy export failed: " + ex.getMessage());
+            return;
+        }
+        plugin.msg(sender, "&aEconomy CSV exported to &fplugins/MiraShop/exports/" + file.getName() + "&a.");
+    }
+
     private Map<String, Double> primarySellYieldPerKill() {
         Map<String, Double> out = new LinkedHashMap<>();
         out.put("CHICKEN", sell("feather", 1D));
@@ -197,10 +233,17 @@ public final class AdminCommand implements CommandExecutor {
         plugin.msg(sender, "&e/mshop reload");
         plugin.msg(sender, "&e/mshop stats <24h|7d|all> &7- economy injection report");
         plugin.msg(sender, "&e/mshop eco &7- spawner ROI estimate");
+        plugin.msg(sender, "&e/mshop export &7- export full economy CSV");
         plugin.msg(sender, "&e/mshop setprice <price> &7(hold the exact item)");
         plugin.msg(sender, "&e/mshop setprice <section> <item> <buy|sell> <price|-1>");
         plugin.msg(sender, "&e/mshop addhand <section> <id> <buy> <sell> &7(id retained for compatibility; exact item is preserved)");
         plugin.msg(sender, "&e/mshop remove <section> <item>");
+    }
+
+    private static String csv(String value) {
+        String safe = value == null ? "" : value;
+        if (safe.contains(",") || safe.contains("\"") || safe.contains("\n")) return "\"" + safe.replace("\"", "\"\"") + "\"";
+        return safe;
     }
 
     private static String pretty(String input) {
