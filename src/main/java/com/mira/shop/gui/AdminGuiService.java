@@ -12,6 +12,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -50,7 +51,7 @@ public final class AdminGuiService {
             inv.setItem(slot++, itemButton(item));
         }
         inv.setItem(45, button(Material.ARROW, "&cBack", List.of()));
-        inv.setItem(53, button(Material.EMERALD, "&aAdd Held Item", List.of("&7Adds the material in your main hand", "&7Default buy/sell price: disabled", "&eThen edit it in this menu")));
+        inv.setItem(53, button(Material.EMERALD, "&aAdd Held Item", List.of("&7Adds the exact item in your main hand", "&7Custom names, lore and PDC are preserved", "&7Default buy/sell price: disabled", "&eThen edit it in this menu")));
         player.openInventory(inv);
     }
 
@@ -82,9 +83,9 @@ public final class AdminGuiService {
             if (slot == 53) {
                 ItemStack hand = player.getInventory().getItemInMainHand();
                 if (hand.getType().isAir()) { plugin.msg(player, "&cHold the item you want to add first."); return; }
-                String id = hand.getType().name().toLowerCase();
-                catalog.addHandItem(section.id(), id, hand.getType(), -1D, -1D);
+                String id = catalog.addHandItem(section.id(), hand, -1D, -1D);
                 plugin.syncEssentialsWorth();
+                plugin.msg(player, "&aAdded exact held item as &f" + id + "&a.");
                 openItems(player, catalog.section(section.id()).orElse(section));
                 return;
             }
@@ -133,7 +134,18 @@ public final class AdminGuiService {
     }
 
     private ItemStack itemButton(ShopItem item) {
-        return button(item.material(), "&f" + item.material().name(), List.of("&aBuy: &f" + (item.canBuy() ? plugin.money(item.buyPrice()) : "Disabled"), "&cSell: &f" + (item.canSell() ? plugin.money(item.sellPrice()) : "Disabled"), "", "&eClick to edit"));
+        ItemStack shown = item.template().clone();
+        shown.setAmount(1);
+        ItemMeta meta = shown.getItemMeta();
+        List<net.kyori.adventure.text.Component> lore = meta.lore() == null ? new ArrayList<>() : new ArrayList<>(meta.lore());
+        lore.add(Text.c(""));
+        lore.add(Text.c("&aBuy: &f" + (item.canBuy() ? plugin.money(item.buyPrice()) : "Disabled")));
+        lore.add(Text.c("&cSell: &f" + (item.canSell() ? plugin.money(item.sellPrice()) : "Disabled")));
+        lore.add(Text.c(""));
+        lore.add(Text.c("&eClick to edit"));
+        meta.lore(lore);
+        shown.setItemMeta(meta);
+        return shown;
     }
 
     private static ItemStack button(Material material, String name, List<String> lore) {
