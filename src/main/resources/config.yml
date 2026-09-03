@@ -5,9 +5,16 @@ currency:
 shop:
   title: "&5Mira Shop"
   buy-confirmation: true
+  buy-confirmation-threshold: 500000.0
+  buy-confirmation-seconds: 10
   sell-confirmation: true
   close-after-transaction: false
   quantity-steps: [1, 16, 32, 64]
+
+# Used only for the admin ROI estimator. This is intentionally configurable so
+# it can be tuned to the server's real MiraSpawners throughput after observation.
+eco:
+  estimated-kills-per-hour-per-spawner: 144.0
 
 messages:
   prefix: "&5[MiraShop] &r"
