@@ -20,6 +20,7 @@ import java.util.*;
 public final class ShopCatalog {
     private static final Set<String> REMOVED_SECTIONS = Set.of("tools", "armor", "brewing", "misc");
     private static final NamespacedKey MIRA_SPAWNER_TYPE = NamespacedKey.fromString("miraspawners:spawner_mob_type");
+    private static final String V014_MIGRATION = "meta.migrations.v0_1_4_custom_items";
 
     private final MiraShopPlugin plugin;
     private final Map<String, ShopSection> sections = new LinkedHashMap<>();
@@ -94,6 +95,13 @@ public final class ShopCatalog {
             yaml.set("sections.spawners.icon", "SPAWNER");
             changed = true;
         }
+
+        if (!yaml.getBoolean(V014_MIGRATION, false)) {
+            applyV014Presets();
+            yaml.set(V014_MIGRATION, true);
+            changed = true;
+        }
+
         ConfigurationSection root = yaml.getConfigurationSection("sections");
         if (root != null) for (String sectionId : root.getKeys(false)) {
             ConfigurationSection items = root.getConfigurationSection(sectionId + ".items");
@@ -108,6 +116,47 @@ public final class ShopCatalog {
             }
         }
         if (changed) saveYaml();
+    }
+
+    private void applyV014Presets() {
+        yaml.set("sections.spawners.name", "&5Spawners");
+        yaml.set("sections.spawners.icon", "SPAWNER");
+        yaml.set("sections.spawners.items.spawner", null);
+
+        setSpawnerPreset("chicken_spawner", "CHICKEN", 5000D);
+        setSpawnerPreset("pig_spawner", "PIG", 20000D);
+        setSpawnerPreset("cow_spawner", "COW", 20000D);
+        setSpawnerPreset("zombie_spawner", "ZOMBIE", 150000D);
+        setSpawnerPreset("skeleton_spawner", "SKELETON", 200000D);
+        setSpawnerPreset("polar_bear_spawner", "POLAR_BEAR", 400000D);
+        setSpawnerPreset("blaze_spawner", "BLAZE", 550000D);
+        setSpawnerPreset("evoker_spawner", "EVOKER", 750000D);
+        setSpawnerPreset("iron_golem_spawner", "IRON_GOLEM", 1250000D);
+
+        setSellPreset("mobdrops", "blaze_rod", "BLAZE_ROD", 65D);
+        setSellPreset("mobdrops", "rotten_flesh", "ROTTEN_FLESH", 10D);
+        setSellPreset("mobdrops", "arrow", "ARROW", 15D);
+        setSellPreset("mobdrops", "gunpowder", "GUNPOWDER", 80D);
+        setSellPreset("mobdrops", "bone", "BONE", 12D);
+        setSellPreset("mobdrops", "leather", "LEATHER", 4.5D);
+        setSellPreset("mobdrops", "feather", "FEATHER", 3.5D);
+        setSellPreset("ores", "iron_ingot", "IRON_INGOT", 85D);
+        setSellPreset("ores", "emerald", "EMERALD", 100D);
+    }
+
+    private void setSpawnerPreset(String id, String type, double buy) {
+        String base = "sections.spawners.items." + id;
+        yaml.set(base + ".material", "SPAWNER");
+        yaml.set(base + ".spawner-type", type);
+        yaml.set(base + ".buy", buy);
+        yaml.set(base + ".sell", -1D);
+    }
+
+    private void setSellPreset(String section, String id, String material, double sell) {
+        String base = "sections." + section + ".items." + id;
+        if (!yaml.contains(base + ".material")) yaml.set(base + ".material", material);
+        if (!yaml.contains(base + ".buy")) yaml.set(base + ".buy", -1D);
+        yaml.set(base + ".sell", sell);
     }
 
     public Collection<ShopSection> sections() { return Collections.unmodifiableCollection(sections.values()); }
