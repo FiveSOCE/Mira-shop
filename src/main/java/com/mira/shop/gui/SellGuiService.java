@@ -40,7 +40,7 @@ public final class SellGuiService {
                 continue;
             }
 
-            ShopItem shopItem = catalog.findByMaterial(live.getType()).orElse(null);
+            ShopItem shopItem = catalog.findByStack(live).orElse(null);
             if (shopItem == null || !transactions.isSellableStack(live, shopItem)) {
                 inv.setItem(guiSlot, blocked(live));
                 continue;
@@ -59,7 +59,7 @@ public final class SellGuiService {
         }
 
         for (int slot = 27; slot < 36; slot++) inv.setItem(slot, filler());
-        inv.setItem(31, button(Material.EMERALD, "&aSell Inventory", List.of("&7Sell every eligible item in your inventory.", "&cNamed and protected custom items are always skipped.")));
+        inv.setItem(31, button(Material.EMERALD, "&aSell Inventory", List.of("&7Sell every eligible configured item in your inventory.", "&7Custom items only sell when their exact template is configured.")));
         player.openInventory(inv);
     }
 
@@ -79,7 +79,7 @@ public final class SellGuiService {
         ItemStack barrier = new ItemStack(Material.BARRIER);
         ItemMeta meta = barrier.getItemMeta();
         String itemName = original.hasItemMeta() && original.getItemMeta().hasDisplayName()
-                ? "Protected / named item"
+                ? "Protected / unconfigured custom item"
                 : "Not sellable";
         meta.displayName(Text.c("&c" + itemName));
         meta.lore(List.of(Text.c("&7" + pretty(original.getType().name())), Text.c("&cThis item cannot be sold here.")));
