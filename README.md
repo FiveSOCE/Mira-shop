@@ -4,9 +4,9 @@ MiraShop is the first-party GUI economy shop for the Mira Minecraft plugin suite
 
 ## Download
 
-**Current release: v0.1.4**
+**Current release: v0.1.5**
 
-[Download MiraShop-0.1.4.jar](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.4/MiraShop-0.1.4.jar)
+[Download MiraShop-0.1.5.jar](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.5/MiraShop-0.1.5.jar)
 
 [View all releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
@@ -19,9 +19,57 @@ MiraShop is the first-party GUI economy shop for the Mira Minecraft plugin suite
 - EssentialsX recommended for worth synchronisation
 - MiraSpawners recommended for typed spawner support
 
-## v0.1.4 custom-item support
+## v0.1.5 economy rebalance
 
-MiraShop shop entries can now preserve an exact `ItemStack` template rather than collapsing everything to a Bukkit `Material`.
+MiraShop v0.1.5 applies the new Factions economy baseline across every active preset category while keeping the intentionally blocked equipment categories excluded.
+
+Updated categories:
+
+- Blocks
+- Farming
+- Food
+- Ores & Minerals
+- Mob Drops
+- Redstone
+- Spawners
+
+A one-time v0.1.5 migration updates the known Mira preset entries inside an existing `shops.yml`. Custom/admin-added shop entries are left untouched. Once applied, the migration is marked complete and does not overwrite later manual edits.
+
+### Spawner progression
+
+Typed spawners remain buy-only.
+
+| Spawner | Buy price |
+| --- | ---: |
+| Chicken | $50,000 |
+| Pig | $75,000 |
+| Cow | $100,000 |
+| Zombie | $175,000 |
+| Skeleton | $225,000 |
+| Polar Bear | $350,000 |
+| Blaze | $650,000 |
+| Evoker | $1,250,000 |
+| Iron Golem | $3,000,000 |
+
+### Key farm values
+
+| Item | Sell value each |
+| --- | ---: |
+| Rotten Flesh | $5.00 |
+| Bone | $8.00 |
+| Arrow | $6.00 |
+| Leather | $4.00 |
+| Feather | $3.00 |
+| Gunpowder | $40.00 |
+| Blaze Rod | $50.00 |
+| Iron Ingot | $40.00 |
+| Emerald | $85.00 |
+
+The full preset economy is stored in `src/main/resources/shops.yml` and migrated into existing installations automatically.
+
+## Custom-item support
+
+MiraShop shop entries preserve exact `ItemStack` templates instead of collapsing everything to a Bukkit `Material`.
 
 This preserves configured:
 
@@ -32,43 +80,7 @@ This preserves configured:
 - enchantments
 - MiraSpawners mob-type metadata
 
-The admin GUI's **Add Held Item** button saves the exact item in the player's hand. Buying that entry recreates the exact configured template. Custom items are sellable only when the inventory item exactly matches a configured shop template, so arbitrary named/PDC items remain protected.
-
-### Typed spawner presets
-
-The Spawners section now ships with buy-only MiraSpawners-compatible presets:
-
-| Spawner | Buy price |
-| --- | ---: |
-| Chicken | $5,000 |
-| Pig | $20,000 |
-| Cow | $20,000 |
-| Zombie | $150,000 |
-| Skeleton | $200,000 |
-| Polar Bear | $400,000 |
-| Blaze | $550,000 |
-| Evoker | $750,000 |
-| Iron Golem | $1,250,000 |
-
-A one-time v0.1.4 migration removes the old generic empty `Spawner` entry and injects these typed entries into an existing `shops.yml`. The migration is then marked complete and will not overwrite later manual edits.
-
-### Mob/farm sell values
-
-The v0.1.4 migration applies:
-
-| Item | Sell value each |
-| --- | ---: |
-| Blaze Rod | $65.00 |
-| Rotten Flesh | $10.00 |
-| Arrow | $15.00 |
-| Gunpowder | $80.00 |
-| Bone | $12.00 |
-| Leather | $4.50 |
-| Feather | $3.50 |
-| Iron Ingot | $85.00 |
-| Emerald | $100.00 |
-
-If an older configured buy price is lower than the new sell price, buying that entry is automatically disabled to prevent infinite buy/sell arbitrage.
+The admin GUI's **Add Held Item** button saves the exact item in the player's hand. Buying that entry recreates the configured template. Custom items are sellable only when the inventory item exactly matches a configured shop template, so arbitrary named/PDC items remain protected.
 
 ## Player commands
 
@@ -153,5 +165,5 @@ gradle clean build
 Build output:
 
 ```text
-build/libs/MiraShop-0.1.4.jar
+build/libs/MiraShop-0.1.5.jar
 ```
