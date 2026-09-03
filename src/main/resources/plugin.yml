@@ -1,10 +1,10 @@
 name: MiraShop
-version: 0.1.3
+version: 0.1.4
 main: com.mira.shop.MiraShopPlugin
 api-version: '1.21'
 authors: [FiveS]
 description: GUI economy shop for the Mira plugin ecosystem.
-softdepend: [Vault, Essentials]
+softdepend: [Vault, Essentials, MiraSpawners]
 commands:
   shop:
     description: Open the Mira shop.
