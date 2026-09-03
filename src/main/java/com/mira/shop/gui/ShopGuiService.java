@@ -61,7 +61,7 @@ public final class ShopGuiService {
 
     public void openTransaction(Player player, String sectionId, ShopItem item) {
         ShopHolder holder = new ShopHolder(ShopHolder.Type.TRANSACTION, sectionId, item.id());
-        Inventory inv = Bukkit.createInventory(holder, 27, Text.c("&5" + pretty(item.material().name())));
+        Inventory inv = Bukkit.createInventory(holder, 27, Text.c("&5" + pretty(item.id())));
         holder.bind(inv);
         fill(inv);
         inv.setItem(13, display(item));
@@ -133,7 +133,22 @@ public final class ShopGuiService {
     }
 
     private String price(double unit, int amount, boolean enabled) { return enabled ? plugin.money(unit * amount) : "Disabled"; }
-    private ItemStack display(ShopItem item) { return button(item.material(), "&f" + pretty(item.material().name()), List.of(item.canBuy() ? "&aBuy: &f" + plugin.money(item.buyPrice()) : "&cNot purchasable", item.canSell() ? "&cSell: &f" + plugin.money(item.sellPrice()) : "&7Not sellable", "", "&eClick to trade")); }
+
+    private ItemStack display(ShopItem item) {
+        ItemStack shown = item.template().clone();
+        shown.setAmount(1);
+        ItemMeta meta = shown.getItemMeta();
+        List<net.kyori.adventure.text.Component> lore = meta.lore() == null ? new ArrayList<>() : new ArrayList<>(meta.lore());
+        lore.add(Text.c(""));
+        lore.add(Text.c(item.canBuy() ? "&aBuy: &f" + plugin.money(item.buyPrice()) : "&cNot purchasable"));
+        lore.add(Text.c(item.canSell() ? "&cSell: &f" + plugin.money(item.sellPrice()) : "&7Not sellable"));
+        lore.add(Text.c(""));
+        lore.add(Text.c("&eClick to trade"));
+        meta.lore(lore);
+        shown.setItemMeta(meta);
+        return shown;
+    }
+
     private static ItemStack button(Material material, String name, List<String> lore) { ItemStack item = new ItemStack(material); ItemMeta meta = item.getItemMeta(); meta.displayName(Text.c(name)); meta.lore(lore.stream().map(Text::c).toList()); item.setItemMeta(meta); return item; }
     private static String pretty(String input) { StringBuilder out = new StringBuilder(); for (String part : input.toLowerCase().split("_")) { if (!out.isEmpty()) out.append(' '); out.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1)); } return out.toString(); }
 }
