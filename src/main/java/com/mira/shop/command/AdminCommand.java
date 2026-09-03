@@ -2,6 +2,7 @@ package com.mira.shop.command;
 
 import com.mira.shop.MiraShopPlugin;
 import com.mira.shop.gui.AdminGuiService;
+import com.mira.shop.model.ShopItem;
 import com.mira.shop.service.ShopCatalog;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -51,6 +52,17 @@ public final class AdminCommand implements CommandExecutor {
                 double value = Double.parseDouble(args[1]);
                 if (!Double.isFinite(value) || value < 0D) throw new IllegalArgumentException();
 
+                ShopItem exact = catalog.findByStack(hand).orElse(null);
+                if (exact != null && exact.customTemplate()) {
+                    String sectionId = catalog.sections().stream()
+                            .filter(section -> section.items().stream().anyMatch(item -> item.id().equals(exact.id())))
+                            .map(section -> section.id()).findFirst().orElse(null);
+                    if (sectionId == null) { plugin.msg(sender, "&cThat custom item is not configured."); return true; }
+                    catalog.setPrice(sectionId, exact.id(), value, value);
+                    plugin.msg(sender, "&aSet custom shop entry &f" + exact.id() + "&a to &f" + plugin.money(value) + "&a.");
+                    return true;
+                }
+
                 Material material = hand.getType();
                 int changed = catalog.setPriceByMaterial(material, value);
                 if (changed == 0) {
@@ -58,11 +70,7 @@ public final class AdminCommand implements CommandExecutor {
                     return true;
                 }
 
-                boolean essentialsUpdated = Bukkit.dispatchCommand(
-                        Bukkit.getConsoleSender(),
-                        "setworth " + material.name().toLowerCase(Locale.ROOT) + " " + value
-                );
-
+                boolean essentialsUpdated = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "setworth " + material.name().toLowerCase(Locale.ROOT) + " " + value);
                 plugin.msg(sender, "&aSet &f" + pretty(material.name()) + "&a to &f" + plugin.money(value)
                         + "&a in Mira-Shop" + (essentialsUpdated ? " and Essentials worth." : ". &eEssentials worth could not be updated."));
                 return true;
@@ -83,12 +91,11 @@ public final class AdminCommand implements CommandExecutor {
                 ItemStack hand = player.getInventory().getItemInMainHand();
                 if (hand.getType().isAir()) { plugin.msg(sender, "&cHold an item first."); return true; }
                 String section = args[1].toLowerCase(Locale.ROOT);
-                String id = args[2].toLowerCase(Locale.ROOT).replace(' ', '_');
                 double buy = Double.parseDouble(args[3]);
                 double sell = Double.parseDouble(args[4]);
-                catalog.addHandItem(section, id, hand.getType(), buy, sell);
+                String generated = catalog.addHandItem(section, hand, buy, sell);
                 plugin.syncEssentialsWorth();
-                plugin.msg(sender, "&aShop item added from your hand.");
+                plugin.msg(sender, "&aExact held item added as &f" + generated + "&a.");
                 return true;
             }
             if (args[0].equalsIgnoreCase("remove") && args.length >= 3) {
@@ -107,9 +114,9 @@ public final class AdminCommand implements CommandExecutor {
     private void printHelp(CommandSender sender) {
         plugin.msg(sender, "&e/mshop edit");
         plugin.msg(sender, "&e/mshop reload");
-        plugin.msg(sender, "&e/mshop setprice <price> &7(hold the item)");
+        plugin.msg(sender, "&e/mshop setprice <price> &7(hold the exact item)");
         plugin.msg(sender, "&e/mshop setprice <section> <item> <buy|sell> <price|-1>");
-        plugin.msg(sender, "&e/mshop addhand <section> <id> <buy> <sell>");
+        plugin.msg(sender, "&e/mshop addhand <section> <id> <buy> <sell> &7(id retained for compatibility; exact item is preserved)");
         plugin.msg(sender, "&e/mshop remove <section> <item>");
     }
 
