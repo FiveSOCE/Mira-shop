@@ -1,69 +1,57 @@
 # MiraShop
 
-First-party GUI economy shop for the Mira Minecraft plugin suite.
+MiraShop is the first-party GUI economy shop for the Mira Paper server suite. It provides configurable buy/sell sections, bulk transactions, typed-spawner support, inventory selling, temporary sales and economy analytics backed by Vault.
 
 ## Download
 
-Current release: **v0.1.8**
-
 [**Download MiraShop v0.1.8**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.8/MiraShop-0.1.8.jar)
 
-[View all releases](https://github.com/FiveSOCE/Mira-shop/releases)
-
-## Requirements
+## Requirements / Dependencies
 
 - Paper 1.21.11
 - Java 21
 - Vault
-- Vault-compatible economy provider
+- A Vault-compatible economy provider
 - EssentialsX recommended for worth synchronisation
 - MiraSpawners recommended for typed-spawner support
 
-## v0.1.8 temporary sale events
+## How MiraShop Works
 
-Temporary sale events modify effective prices at runtime without changing permanent values in `shops.yml`.
+MiraShop stores permanent shop sections/items and their base buy/sell prices in its shop data. Players browse the GUI by section, search for items, buy items when `mirashop.buy` is allowed and sell items when `mirashop.sell` is allowed. Items can be configured as Buy Only, Sell Only or Buy & Sell. Bulk-buying and expensive-purchase confirmation are handled by the GUI to reduce accidental purchases.
 
-Scopes:
+`/sellall` sells eligible items from the player's hand or inventory using MiraShop's current matching/pricing rules. Typed MiraSpawners items retain their exact spawner identity instead of collapsing to generic vanilla spawner material pricing.
 
-```text
-all
-section:<section>
-item:<item>
-```
+Temporary sale events apply runtime price modifiers without rewriting permanent values. A sale can target `all`, `section:<section>` or `item:<item>`, and can independently affect buy/sell pricing according to the configured sale parameters. MiraShop also records transaction analytics, supports economy overview/statistics, spawner ROI information and CSV economy exports. Successful transactions can be consumed by other Mira economy modules.
 
-Examples:
+## Commands
 
-```text
-/mshop sale start weekend 20 0 120 all
-/mshop sale start grinder 15 25 60 section:spawners
-/mshop sale start igsale 25 0 30 item:iron_golem_spawner
-/mshop sale list
-/mshop sale stop <id>
-```
+| Command | Permission | What it does |
+| --- | --- | --- |
+| `/shop` | `mirashop.use` | Opens the main MiraShop GUI. |
+| `/shop <section>` | `mirashop.use` + applicable `mirashop.section.*` access | Opens a specific shop section. |
+| `/shop search <item>` | `mirashop.use` | Searches configured shop entries for an item. |
+| `/sellall hand` | `mirashop.sellall` | Sells eligible items matching the item held in hand. |
+| `/sellall inventory` | `mirashop.sellall` | Sells eligible sellable items from the player's inventory. |
+| `/sellall <material>` | `mirashop.sellall` | Sells matching eligible material/items from inventory. |
+| `/mshop edit` | `mirashop.admin` | Opens/starts administrative shop editing. |
+| `/mshop reload` | `mirashop.admin` | Reloads MiraShop configuration/shop data. |
+| `/mshop stats <24h|7d|all>` | `mirashop.admin` | Shows transaction/economy statistics for the selected period. |
+| `/mshop eco` | `mirashop.admin` | Shows the economy overview/analytics view. |
+| `/mshop export` | `mirashop.admin` | Exports economy/shop analytics to CSV. |
+| `/mshop setprice ...` | `mirashop.admin` | Administratively changes configured item pricing. |
+| `/mshop addhand ...` | `mirashop.admin` | Adds the item held by the administrator to shop configuration. |
+| `/mshop remove ...` | `mirashop.admin` | Removes a configured shop entry. |
+| `/mshop sale start <id> <buy%> <sell%> <minutes> <scope>` | `mirashop.admin` | Starts a temporary runtime sale event without changing permanent prices. |
+| `/mshop sale list` | `mirashop.admin` | Lists active sale events. |
+| `/mshop sale stop <id>` | `mirashop.admin` | Stops an active sale event. |
 
-Sale-aware pricing is shown in the GUI and used by purchase confirmation. Permanent base prices remain untouched.
+## Permissions
 
-## Economy tools
-
-```text
-/shop search <item>
-/mshop stats <24h|7d|all>
-/mshop eco
-/mshop export
-```
-
-MiraShop provides Buy Only / Sell Only / Buy & Sell modes, bulk buying, expensive-purchase confirmation, economy transaction analytics, spawner ROI estimates and CSV economy exports.
-
-Typed spawners preserve exact MiraSpawners item identity and remain configurable independently from vanilla materials.
-
-## Building
-
-```bash
-gradle clean build
-```
-
-Output:
-
-```text
-build/libs/MiraShop-0.1.8.jar
-```
+| Permission | Default | What it does |
+| --- | --- | --- |
+| `mirashop.use` | Everyone | Allows opening/searching MiraShop. |
+| `mirashop.buy` | Everyone | Allows purchasing shop items. |
+| `mirashop.sell` | Everyone | Allows selling items through shop interfaces. |
+| `mirashop.sellall` | Everyone | Allows `/sellall`. |
+| `mirashop.admin` | OP | Allows shop editing, reloads, pricing, sales and analytics administration. |
+| `mirashop.section.*` | Everyone | Wildcard/default access to shop sections; section-specific nodes can be used to restrict individual sections. |
