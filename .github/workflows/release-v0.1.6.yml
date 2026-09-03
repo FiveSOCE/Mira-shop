@@ -1,0 +1,40 @@
+name: Release v0.1.6
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-v0.1.6.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tested source
+        uses: actions/checkout@v4
+        with:
+          ref: aa01be9ac64579d979b130ae6530c89d8a5e623a
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10'
+      - name: Build
+        run: gradle clean build --stacktrace
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.1.6 \
+            build/libs/MiraShop-0.1.6.jar \
+            --target aa01be9ac64579d979b130ae6530c89d8a5e623a \
+            --title "MiraShop v0.1.6" \
+            --notes "Economy intelligence and trading QoL update. Adds /shop search, 1/16/32/64 bulk buying, configurable confirmation for expensive purchases, explicit buy-only/sell-only/buy-and-sell display, persistent hourly/all-time economy transaction analytics, /mshop stats for 24h/7d/all-time economy injection reports, and /mshop eco for configurable spawner ROI estimates."
