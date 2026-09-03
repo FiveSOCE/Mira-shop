@@ -18,7 +18,7 @@ public final class TransactionService {
 
     public boolean buy(Player player, ShopItem item, int amount) {
         if (!player.hasPermission("mirashop.buy") || !item.canBuy() || amount <= 0) return false;
-        double total = safeTotal(item.buyPrice(), amount);
+        double total = safeTotal(plugin.sales().buyPrice(item), amount);
         if (total < 0D || economy.balance(player) + 0.0001D < total) {
             plugin.msg(player, plugin.message("insufficient-funds"));
             return false;
@@ -49,7 +49,7 @@ public final class TransactionService {
             plugin.msg(player, plugin.message("nothing-to-sell"));
             return false;
         }
-        double total = safeTotal(item.sellPrice(), amount);
+        double total = safeTotal(plugin.sales().sellPrice(item), amount);
         if (total < 0D || !economy.deposit(player, total)) return false;
         remove(player, item, amount);
         plugin.stats().recordSell(item, amount, total);
@@ -75,7 +75,7 @@ public final class TransactionService {
         if (stack == null || stack.getType().isAir()) return false;
         ShopItem item = plugin.catalog().findByStack(stack).orElse(null);
         if (item == null || !isSellableStack(stack, item)) return false;
-        double total = safeTotal(item.sellPrice(), stack.getAmount());
+        double total = safeTotal(plugin.sales().sellPrice(item), stack.getAmount());
         if (total < 0D || !economy.deposit(player, total)) return false;
         ItemStack sold = stack.clone();
         player.getInventory().setItem(playerSlot, null);
@@ -96,7 +96,7 @@ public final class TransactionService {
             if (stack == null || stack.getType().isAir()) continue;
             ShopItem item = plugin.catalog().findByStack(stack).orElse(null);
             if (item == null || !isSellableStack(stack, item)) continue;
-            double value = safeTotal(item.sellPrice(), stack.getAmount());
+            double value = safeTotal(plugin.sales().sellPrice(item), stack.getAmount());
             if (value < 0D) continue;
             total += value;
             sold += stack.getAmount();
@@ -109,7 +109,7 @@ public final class TransactionService {
         }
         if (!economy.deposit(player, total)) return;
         player.getInventory().setStorageContents(result);
-        byItem.forEach((item, amount) -> plugin.stats().recordSell(item, amount, item.sellPrice() * amount));
+        byItem.forEach((item, amount) -> plugin.stats().recordSell(item, amount, plugin.sales().sellPrice(item) * amount));
         plugin.msg(player, "&aSold &f" + sold + "&a items for &f" + plugin.money(total) + "&a.");
     }
 
