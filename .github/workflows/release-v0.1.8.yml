@@ -1,0 +1,40 @@
+name: Release v0.1.8
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-v0.1.8.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tested source
+        uses: actions/checkout@v4
+        with:
+          ref: 4e797774c0c785ed9551b49c33acf31119029c25
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10'
+      - name: Build
+        run: gradle clean build --stacktrace
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.1.8 \
+            build/libs/MiraShop-0.1.8.jar \
+            --target 4e797774c0c785ed9551b49c33acf31119029c25 \
+            --title "MiraShop v0.1.8" \
+            --notes "Temporary sale-event update. Adds configurable timed shop sales with buy discounts and sell bonuses scoped to all items, a section or a single item, without modifying permanent base prices. Sale-aware GUI pricing and purchase confirmation are included."
