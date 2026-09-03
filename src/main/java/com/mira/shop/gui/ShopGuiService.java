@@ -14,11 +14,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public final class ShopGuiService {
     private static final List<Integer> MAIN_SECTION_SLOTS = List.of(10, 11, 12, 13, 14, 15, 16);
@@ -47,6 +43,7 @@ public final class ShopGuiService {
             inv.setItem(MAIN_SECTION_SLOTS.get(i), button(section.icon(), section.displayName(), List.of("&7Click to browse")));
         }
         inv.setItem(22, button(Material.GOLD_INGOT, "&eBalance", List.of("&7Current balance: &f" + plugin.money(economy.balance(player)))));
+        if (!plugin.sales().active().isEmpty()) inv.setItem(4, button(Material.FIREWORK_STAR, "&dServer Sale Active", plugin.sales().active().stream().limit(5).map(s -> "&7" + s.id() + " &f" + s.scope() + " &a-" + s.buyDiscountPercent() + "% buy &b+" + s.sellBonusPercent() + "% sell &8(" + s.minutesRemaining() + "m)").toList()));
         player.openInventory(inv);
     }
 
@@ -69,14 +66,14 @@ public final class ShopGuiService {
         holder.bind(inv);
         fill(inv);
         inv.setItem(13, display(item));
-
-        inv.setItem(19, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 1", List.of("&7Cost: &f" + price(item.buyPrice(), 1, item.canBuy()))));
-        inv.setItem(20, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 16", List.of("&7Cost: &f" + price(item.buyPrice(), 16, item.canBuy()))));
-        inv.setItem(21, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 32", List.of("&7Cost: &f" + price(item.buyPrice(), 32, item.canBuy()))));
-        inv.setItem(22, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 64", List.of("&7Cost: &f" + price(item.buyPrice(), 64, item.canBuy()))));
-
-        inv.setItem(24, button(Material.RED_STAINED_GLASS_PANE, "&cSell 1", List.of("&7Value: &f" + price(item.sellPrice(), 1, item.canSell()))));
-        inv.setItem(25, button(Material.RED_STAINED_GLASS_PANE, "&cSell 16", List.of("&7Value: &f" + price(item.sellPrice(), 16, item.canSell()))));
+        double buy = plugin.sales().buyPrice(item);
+        double sell = plugin.sales().sellPrice(item);
+        inv.setItem(19, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 1", List.of("&7Cost: &f" + price(buy, 1, item.canBuy()))));
+        inv.setItem(20, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 16", List.of("&7Cost: &f" + price(buy, 16, item.canBuy()))));
+        inv.setItem(21, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 32", List.of("&7Cost: &f" + price(buy, 32, item.canBuy()))));
+        inv.setItem(22, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 64", List.of("&7Cost: &f" + price(buy, 64, item.canBuy()))));
+        inv.setItem(24, button(Material.RED_STAINED_GLASS_PANE, "&cSell 1", List.of("&7Value: &f" + price(sell, 1, item.canSell()))));
+        inv.setItem(25, button(Material.RED_STAINED_GLASS_PANE, "&cSell 16", List.of("&7Value: &f" + price(sell, 16, item.canSell()))));
         inv.setItem(26, button(Material.RED_STAINED_GLASS_PANE, "&cSell All", List.of("&7You have sellable: &f" + transactions.count(player, item))));
         inv.setItem(31, button(Material.ARROW, "&cBack", List.of()));
         player.openInventory(inv);
@@ -120,14 +117,13 @@ public final class ShopGuiService {
 
     private void requestBuy(Player player, ShopItem item, int amount) {
         if (!item.canBuy()) return;
-        double total = item.buyPrice() * amount;
+        double total = plugin.sales().buyPrice(item) * amount;
         double threshold = plugin.getConfig().getDouble("shop.buy-confirmation-threshold", 500000D);
         if (!plugin.getConfig().getBoolean("shop.buy-confirmation", true) || total < threshold) {
             transactions.buy(player, item, amount);
             pendingBuys.remove(player.getUniqueId());
             return;
         }
-
         long now = System.currentTimeMillis();
         long timeout = Math.max(1L, plugin.getConfig().getLong("shop.buy-confirmation-seconds", 10L)) * 1000L;
         PendingBuy pending = pendingBuys.get(player.getUniqueId());
@@ -136,10 +132,8 @@ public final class ShopGuiService {
             transactions.buy(player, item, amount);
             return;
         }
-
         pendingBuys.put(player.getUniqueId(), new PendingBuy(item.id(), amount, now));
-        plugin.msg(player, "&eLarge purchase: &f" + amount + "x " + pretty(item.id()) + " &efor &f" + plugin.money(total)
-                + "&e. Click the same Buy button again within &f" + (timeout / 1000L) + "s&e to confirm.");
+        plugin.msg(player, "&eLarge purchase: &f" + amount + "x " + pretty(item.id()) + " &efor &f" + plugin.money(total) + "&e. Click the same Buy button again within &f" + (timeout / 1000L) + "s&e to confirm.");
     }
 
     private List<ShopSection> visibleSections(Player player) {
@@ -175,8 +169,18 @@ public final class ShopGuiService {
         if (item.canBuy() && item.canSell()) lore.add(Text.c("&eMode: &fBuy & Sell"));
         else if (item.canBuy()) lore.add(Text.c("&aMode: &fBuy Only"));
         else if (item.canSell()) lore.add(Text.c("&cMode: &fSell Only"));
-        lore.add(Text.c(item.canBuy() ? "&aBuy: &f" + plugin.money(item.buyPrice()) : "&cNot purchasable"));
-        lore.add(Text.c(item.canSell() ? "&cSell: &f" + plugin.money(item.sellPrice()) : "&7Not sellable"));
+        double buy = plugin.sales().buyPrice(item);
+        double sell = plugin.sales().sellPrice(item);
+        lore.add(Text.c(item.canBuy() ? "&aBuy: &f" + plugin.money(buy) : "&cNot purchasable"));
+        lore.add(Text.c(item.canSell() ? "&cSell: &f" + plugin.money(sell) : "&7Not sellable"));
+        var saleList = plugin.sales().salesFor(item);
+        if (!saleList.isEmpty()) {
+            lore.add(Text.c(""));
+            lore.add(Text.c("&dSALE ACTIVE"));
+            for (var sale : saleList) lore.add(Text.c("&7" + sale.id() + " &8(" + sale.minutesRemaining() + "m left)"));
+            if (item.canBuy() && Math.abs(buy - item.buyPrice()) > 0.001D) lore.add(Text.c("&8Base buy: " + plugin.money(item.buyPrice())));
+            if (item.canSell() && Math.abs(sell - item.sellPrice()) > 0.001D) lore.add(Text.c("&8Base sell: " + plugin.money(item.sellPrice())));
+        }
         lore.add(Text.c(""));
         lore.add(Text.c("&eClick to trade"));
         meta.lore(lore);
