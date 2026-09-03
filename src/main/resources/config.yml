@@ -17,7 +17,7 @@ eco:
   estimated-kills-per-hour-per-spawner: 144.0
 
 messages:
-  prefix: "&5[MiraShop] &r"
+  prefix: "&5&lMira &8>> &r"
   no-permission: "&cYou do not have permission to do that."
   economy-missing: "&cNo Vault economy provider is available."
   bought: "&aBought &f%amount%x %item% &afor &f%price%&a."
