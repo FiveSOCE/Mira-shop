@@ -10,7 +10,7 @@ public record ShopItem(String id, ItemStack template, double buyPrice, double se
     }
 
     public Material material() { return template.getType(); }
-    public boolean canBuy() { return buyPrice >= 0; }
+    public boolean canBuy() { return buyPrice >= 0 && (sellPrice < 0 || buyPrice >= sellPrice); }
     public boolean canSell() { return sellPrice >= 0; }
 
     public ItemStack create(int amount) {
