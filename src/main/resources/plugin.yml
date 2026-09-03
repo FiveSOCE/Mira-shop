@@ -1,5 +1,5 @@
 name: MiraShop
-version: 0.1.5
+version: 0.1.6
 main: com.mira.shop.MiraShopPlugin
 api-version: '1.21'
 authors: [FiveS]
@@ -7,16 +7,16 @@ description: GUI economy shop for the Mira plugin ecosystem.
 softdepend: [Vault, Essentials, MiraSpawners]
 commands:
   shop:
-    description: Open the Mira shop.
-    usage: /shop [section]
+    description: Open or search the Mira shop.
+    usage: /shop [section|search <item>]
     permission: mirashop.use
   sellall:
     description: Sell matching items from your inventory.
     usage: /sellall <hand|inventory|material>
     permission: mirashop.sellall
   mshop:
-    description: MiraShop administration.
-    usage: /mshop [edit|reload|setprice|addhand|remove]
+    description: MiraShop administration and economy analytics.
+    usage: /mshop [edit|reload|stats|eco|setprice|addhand|remove]
     permission: mirashop.admin
 permissions:
   mirashop.use:
