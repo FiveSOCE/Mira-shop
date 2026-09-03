@@ -11,6 +11,7 @@ import com.mira.shop.listener.SellGuiListener;
 import com.mira.shop.listener.ShopMenuListener;
 import com.mira.shop.service.EconomyRebalanceMigration;
 import com.mira.shop.service.EconomyService;
+import com.mira.shop.service.EconomyStatsService;
 import com.mira.shop.service.ShopCatalog;
 import com.mira.shop.service.TransactionService;
 import com.mira.shop.util.Text;
@@ -28,6 +29,7 @@ public final class MiraShopPlugin extends JavaPlugin {
     private final DecimalFormat money = new DecimalFormat("0.00");
     private ShopCatalog catalog;
     private EconomyService economy;
+    private EconomyStatsService stats;
 
     @Override
     public void onEnable() {
@@ -37,6 +39,7 @@ public final class MiraShopPlugin extends JavaPlugin {
         catalog.load();
         economy = new EconomyService();
         if (!economy.hook()) getLogger().warning("No Vault economy provider detected. Shop transactions will be unavailable until one is present.");
+        stats = new EconomyStatsService(this);
 
         TransactionService transactions = new TransactionService(this, economy);
         ShopGuiService gui = new ShopGuiService(this, catalog, transactions, economy);
@@ -62,6 +65,7 @@ public final class MiraShopPlugin extends JavaPlugin {
     }
 
     public ShopCatalog catalog() { return catalog; }
+    public EconomyStatsService stats() { return stats; }
 
     public void syncEssentialsWorth() {
         if (Bukkit.getPluginManager().getPlugin("Essentials") == null) return;
