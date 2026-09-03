@@ -9,6 +9,7 @@ import com.mira.shop.gui.ShopGuiService;
 import com.mira.shop.listener.AdminMenuListener;
 import com.mira.shop.listener.SellGuiListener;
 import com.mira.shop.listener.ShopMenuListener;
+import com.mira.shop.service.EconomyRebalanceMigration;
 import com.mira.shop.service.EconomyService;
 import com.mira.shop.service.ShopCatalog;
 import com.mira.shop.service.TransactionService;
@@ -31,6 +32,7 @@ public final class MiraShopPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        EconomyRebalanceMigration.apply(this);
         catalog = new ShopCatalog(this);
         catalog.load();
         economy = new EconomyService();
