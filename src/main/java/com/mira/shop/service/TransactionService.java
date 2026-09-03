@@ -23,7 +23,7 @@ public final class TransactionService {
             plugin.msg(player, plugin.message("insufficient-funds"));
             return false;
         }
-        ItemStack stack = new ItemStack(item.material(), amount);
+        ItemStack stack = item.create(amount);
         if (!hasSpace(player, stack)) {
             plugin.msg(player, plugin.message("inventory-full"));
             return false;
@@ -36,7 +36,7 @@ public final class TransactionService {
             plugin.msg(player, plugin.message("inventory-full"));
             return false;
         }
-        plugin.msg(player, plugin.message("bought").replace("%amount%", String.valueOf(amount)).replace("%item%", pretty(item.material().name())).replace("%price%", plugin.money(total)));
+        plugin.msg(player, plugin.message("bought").replace("%amount%", String.valueOf(amount)).replace("%item%", displayName(item)).replace("%price%", plugin.money(total)));
         return true;
     }
 
@@ -51,7 +51,7 @@ public final class TransactionService {
         double total = safeTotal(item.sellPrice(), amount);
         if (total < 0D || !economy.deposit(player, total)) return false;
         remove(player, item, amount);
-        plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(amount)).replace("%item%", pretty(item.material().name())).replace("%price%", plugin.money(total)));
+        plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(amount)).replace("%item%", displayName(item)).replace("%price%", plugin.money(total)));
         return true;
     }
 
@@ -71,13 +71,13 @@ public final class TransactionService {
         if (!player.hasPermission("mirashop.sell")) return false;
         ItemStack stack = player.getInventory().getItem(playerSlot);
         if (stack == null || stack.getType().isAir()) return false;
-        ShopItem item = plugin.catalog().findByMaterial(stack.getType()).orElse(null);
+        ShopItem item = plugin.catalog().findByStack(stack).orElse(null);
         if (item == null || !isSellableStack(stack, item)) return false;
         double total = safeTotal(item.sellPrice(), stack.getAmount());
         if (total < 0D || !economy.deposit(player, total)) return false;
         ItemStack sold = stack.clone();
         player.getInventory().setItem(playerSlot, null);
-        plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(sold.getAmount())).replace("%item%", pretty(sold.getType().name())).replace("%price%", plugin.money(total)));
+        plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(sold.getAmount())).replace("%item%", displayName(item)).replace("%price%", plugin.money(total)));
         return true;
     }
 
@@ -90,7 +90,7 @@ public final class TransactionService {
         for (int i = 0; i < original.length; i++) {
             ItemStack stack = original[i];
             if (stack == null || stack.getType().isAir()) continue;
-            ShopItem item = plugin.catalog().findByMaterial(stack.getType()).orElse(null);
+            ShopItem item = plugin.catalog().findByStack(stack).orElse(null);
             if (item == null || !isSellableStack(stack, item)) continue;
             double value = safeTotal(item.sellPrice(), stack.getAmount());
             if (value < 0D) continue;
@@ -108,7 +108,8 @@ public final class TransactionService {
     }
 
     public boolean isSellableStack(ItemStack stack, ShopItem item) {
-        if (stack == null || stack.getType() != item.material() || !item.canSell()) return false;
+        if (stack == null || !item.canSell() || !plugin.catalog().matches(stack, item)) return false;
+        if (item.customTemplate()) return true;
         if (stack.hasItemMeta()) {
             var meta = stack.getItemMeta();
             if (meta.hasDisplayName() || meta.hasCustomName()) return false;
@@ -150,10 +151,11 @@ public final class TransactionService {
         return Double.isFinite(total) && total >= 0D ? total : -1D;
     }
 
-    private static String pretty(String name) {
-        String[] parts = name.toLowerCase().split("_");
+    private static String displayName(ShopItem item) {
+        String id = item.id().replace('_', ' ');
         StringBuilder out = new StringBuilder();
-        for (String part : parts) {
+        for (String part : id.split(" ")) {
+            if (part.isBlank()) continue;
             if (!out.isEmpty()) out.append(' ');
             out.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
         }
