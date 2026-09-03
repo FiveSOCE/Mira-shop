@@ -4,9 +4,9 @@ MiraShop is the first-party GUI economy shop for the Mira Minecraft plugin suite
 
 ## Download
 
-**Current release: v0.1.3**
+**Current release: v0.1.4**
 
-[Download MiraShop-0.1.3.jar](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.3/MiraShop-0.1.3.jar)
+[Download MiraShop-0.1.4.jar](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.4/MiraShop-0.1.4.jar)
 
 [View all releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
@@ -17,6 +17,58 @@ MiraShop is the first-party GUI economy shop for the Mira Minecraft plugin suite
 - Vault
 - A Vault-compatible economy provider
 - EssentialsX recommended for worth synchronisation
+- MiraSpawners recommended for typed spawner support
+
+## v0.1.4 custom-item support
+
+MiraShop shop entries can now preserve an exact `ItemStack` template rather than collapsing everything to a Bukkit `Material`.
+
+This preserves configured:
+
+- custom names
+- lore
+- PersistentDataContainer data
+- custom model data
+- enchantments
+- MiraSpawners mob-type metadata
+
+The admin GUI's **Add Held Item** button saves the exact item in the player's hand. Buying that entry recreates the exact configured template. Custom items are sellable only when the inventory item exactly matches a configured shop template, so arbitrary named/PDC items remain protected.
+
+### Typed spawner presets
+
+The Spawners section now ships with buy-only MiraSpawners-compatible presets:
+
+| Spawner | Buy price |
+| --- | ---: |
+| Chicken | $5,000 |
+| Pig | $20,000 |
+| Cow | $20,000 |
+| Zombie | $150,000 |
+| Skeleton | $200,000 |
+| Polar Bear | $400,000 |
+| Blaze | $550,000 |
+| Evoker | $750,000 |
+| Iron Golem | $1,250,000 |
+
+A one-time v0.1.4 migration removes the old generic empty `Spawner` entry and injects these typed entries into an existing `shops.yml`. The migration is then marked complete and will not overwrite later manual edits.
+
+### Mob/farm sell values
+
+The v0.1.4 migration applies:
+
+| Item | Sell value each |
+| --- | ---: |
+| Blaze Rod | $65.00 |
+| Rotten Flesh | $10.00 |
+| Arrow | $15.00 |
+| Gunpowder | $80.00 |
+| Bone | $12.00 |
+| Leather | $4.50 |
+| Feather | $3.50 |
+| Iron Ingot | $85.00 |
+| Emerald | $100.00 |
+
+If an older configured buy price is lower than the new sell price, buying that entry is automatically disabled to prevent infinite buy/sell arbitrage.
 
 ## Player commands
 
@@ -47,56 +99,35 @@ Preset sections:
 - Redstone
 - Spawners
 
-Tools, Armor, Brewing and Misc are removed automatically from existing `shops.yml` files. The Spawners section is added automatically.
+Tools, Armor, Brewing and Misc are removed automatically from existing `shops.yml` files.
 
 Armor, weapons and tools are not sellable through MiraShop. Existing sell prices on those materials are automatically disabled.
 
-Section GUIs resize automatically based on how many items they contain while keeping the glowing glass border and dead-space filler.
-
 ## Sell GUI
 
-`/sell`, `/sellhand` and `/sell hand` are intercepted by MiraShop and open a 9x4 protected sell inventory.
+`/sell`, `/sellhand` and `/sell hand` open a protected 9x4 sell inventory.
 
-- The top three rows mirror the player's 27-slot main inventory.
-- Sellable stacks show the real item and their value.
-- Unsellable stacks are replaced with Barrier icons.
-- Empty slots use glowing grey glass.
-- Clicking a sellable stack sells that stack.
-- Players cannot take, place, shift-click or drag items through the GUI.
-- The bottom-centre **Sell Inventory** button sells every eligible item in the full player inventory.
-- Named items are always blocked.
-- Mira/PDC custom items, enchanted items, custom-model items and damaged equipment are also protected.
+- Sellable stacks show the real item and value.
+- Unsellable or unconfigured custom stacks show as barriers.
+- Exact configured custom-item templates can be sold.
+- Arbitrary named/PDC/custom-model/enchanted items remain protected.
+- The bottom-centre **Sell Inventory** button sells every eligible configured item in the full player inventory.
 
 ## Essentials worth synchronisation
 
-MiraShop forces its configured sell prices into Essentials worth data when the plugin starts and whenever MiraShop is reloaded.
+Normal material sell prices are synchronized into Essentials worth data on startup/reload. Typed/custom shop entries retain their MiraShop-specific identity and are not collapsed into a generic spawner identity.
 
-Hold a configured item and run:
-
-```text
-/mshop setprice <price>
-```
-
-MiraShop updates its configured price and dispatches this command from console:
+Admin commands:
 
 ```text
-/setworth <item_name> <price>
-```
-
-GUI and granular price edits also refresh Essentials worth data so the two systems do not drift apart.
-
-Legacy granular pricing remains available:
-
-```text
+/mshop
+/mshop edit
+/mshop reload
+/mshop setprice <price>                 # hold the exact item
 /mshop setprice <section> <item> <buy|sell> <price|-1>
+/mshop addhand <section> <id> <buy> <sell>
+/mshop remove <section> <item>
 ```
-
-Other admin commands:
-
-- `/mshop edit`
-- `/mshop reload`
-- `/mshop addhand <section> <id> <buy> <sell>`
-- `/mshop remove <section> <item>`
 
 ## Permissions
 
@@ -113,8 +144,14 @@ Other admin commands:
 - `config.yml`
 - `shops.yml`
 
-## Safety
+## Building
 
-MiraShop validates prices before transactions, checks money before withdrawal, verifies inventory capacity before purchases, and protects named/custom items from material-only selling.
+```bash
+gradle clean build
+```
 
-Build output: `build/libs/MiraShop-0.1.3.jar`
+Build output:
+
+```text
+build/libs/MiraShop-0.1.4.jar
+```
