@@ -36,6 +36,7 @@ public final class TransactionService {
             plugin.msg(player, plugin.message("inventory-full"));
             return false;
         }
+        plugin.stats().recordBuy(item, amount, total);
         plugin.msg(player, plugin.message("bought").replace("%amount%", String.valueOf(amount)).replace("%item%", displayName(item)).replace("%price%", plugin.money(total)));
         return true;
     }
@@ -51,6 +52,7 @@ public final class TransactionService {
         double total = safeTotal(item.sellPrice(), amount);
         if (total < 0D || !economy.deposit(player, total)) return false;
         remove(player, item, amount);
+        plugin.stats().recordSell(item, amount, total);
         plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(amount)).replace("%item%", displayName(item)).replace("%price%", plugin.money(total)));
         return true;
     }
@@ -77,6 +79,7 @@ public final class TransactionService {
         if (total < 0D || !economy.deposit(player, total)) return false;
         ItemStack sold = stack.clone();
         player.getInventory().setItem(playerSlot, null);
+        plugin.stats().recordSell(item, sold.getAmount(), total);
         plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(sold.getAmount())).replace("%item%", displayName(item)).replace("%price%", plugin.money(total)));
         return true;
     }
@@ -87,6 +90,7 @@ public final class TransactionService {
         int sold = 0;
         ItemStack[] original = player.getInventory().getStorageContents();
         ItemStack[] result = original.clone();
+        java.util.Map<ShopItem, Integer> byItem = new java.util.HashMap<>();
         for (int i = 0; i < original.length; i++) {
             ItemStack stack = original[i];
             if (stack == null || stack.getType().isAir()) continue;
@@ -96,6 +100,7 @@ public final class TransactionService {
             if (value < 0D) continue;
             total += value;
             sold += stack.getAmount();
+            byItem.merge(item, stack.getAmount(), Integer::sum);
             result[i] = null;
         }
         if (sold == 0) {
@@ -104,6 +109,7 @@ public final class TransactionService {
         }
         if (!economy.deposit(player, total)) return;
         player.getInventory().setStorageContents(result);
+        byItem.forEach((item, amount) -> plugin.stats().recordSell(item, amount, item.sellPrice() * amount));
         plugin.msg(player, "&aSold &f" + sold + "&a items for &f" + plugin.money(total) + "&a.");
     }
 
