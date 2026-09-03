@@ -3,6 +3,8 @@ package com.mira.shop.command;
 import com.mira.shop.MiraShopPlugin;
 import com.mira.shop.gui.AdminGuiService;
 import com.mira.shop.model.ShopItem;
+import com.mira.shop.model.ShopSection;
+import com.mira.shop.service.EconomyStatsService;
 import com.mira.shop.service.ShopCatalog;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -13,7 +15,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public final class AdminCommand implements CommandExecutor {
     private final MiraShopPlugin plugin;
@@ -40,6 +44,14 @@ public final class AdminCommand implements CommandExecutor {
         if (args[0].equalsIgnoreCase("reload")) {
             plugin.reloadAll();
             plugin.msg(sender, plugin.message("reloaded"));
+            return true;
+        }
+        if (args[0].equalsIgnoreCase("stats")) {
+            showStats(sender, args.length >= 2 ? args[1] : "24h");
+            return true;
+        }
+        if (args[0].equalsIgnoreCase("eco")) {
+            showSpawnerEconomy(sender);
             return true;
         }
         try {
@@ -111,9 +123,80 @@ public final class AdminCommand implements CommandExecutor {
         return true;
     }
 
+    private void showStats(CommandSender sender, String range) {
+        java.util.List<EconomyStatsService.ItemStats> stats;
+        String label;
+        if (range.equalsIgnoreCase("all")) { stats = plugin.stats().allTime(); label = "All Time"; }
+        else if (range.equalsIgnoreCase("7d")) { stats = plugin.stats().report(24 * 7); label = "Last 7 Days"; }
+        else { stats = plugin.stats().report(24); label = "Last 24 Hours"; }
+
+        plugin.msg(sender, "&5&m--------------------------------");
+        plugin.msg(sender, "&dMiraShop Economy Stats &7- &f" + label);
+        double created = stats.stream().mapToDouble(EconomyStatsService.ItemStats::moneyCreated).sum();
+        double spent = stats.stream().mapToDouble(EconomyStatsService.ItemStats::moneySpent).sum();
+        plugin.msg(sender, "&7Money created by sales: &a" + plugin.money(created));
+        plugin.msg(sender, "&7Money removed by purchases: &c" + plugin.money(spent));
+        plugin.msg(sender, "&7Net shop injection: &f" + (created >= spent ? "+" : "-") + plugin.money(Math.abs(created - spent)));
+        plugin.msg(sender, "&7Top money-generating items:");
+        if (stats.isEmpty()) plugin.msg(sender, "&8No transactions recorded yet.");
+        int shown = 0;
+        for (EconomyStatsService.ItemStats stat : stats) {
+            if (stat.moneyCreated() <= 0D) continue;
+            plugin.msg(sender, "&f" + (++shown) + ". &d" + pretty(stat.itemId()) + " &7Sold &f" + stat.unitsSold()
+                    + " &7Created &a" + plugin.money(stat.moneyCreated()) + " &7Net &f"
+                    + (stat.netInjection() >= 0D ? "+" : "-") + plugin.money(Math.abs(stat.netInjection())));
+            if (shown >= 10) break;
+        }
+        plugin.msg(sender, "&7Ranges: &f/mshop stats 24h&7, &f7d&7, &fall");
+    }
+
+    private void showSpawnerEconomy(CommandSender sender) {
+        ShopSection spawners = catalog.section("spawners").orElse(null);
+        if (spawners == null) { plugin.msg(sender, "&cSpawner section is missing."); return; }
+        double killsPerHour = Math.max(1D, plugin.getConfig().getDouble("eco.estimated-kills-per-hour-per-spawner", 144D));
+        Map<String, Double> yield = primarySellYieldPerKill();
+        plugin.msg(sender, "&5&m--------------------------------");
+        plugin.msg(sender, "&dSpawner ROI Estimate &7(&f" + String.format(Locale.US, "%.0f", killsPerHour) + " kills/h per spawner&7)");
+        plugin.msg(sender, "&8Estimates use primary configured sell drops only, no Looting or secondary loot.");
+        for (ShopItem item : spawners.items()) {
+            if (!item.canBuy()) continue;
+            String type = catalog.spawnerType(item.template());
+            if (type == null) type = item.id().replace("_spawner", "").toUpperCase(Locale.ROOT);
+            double perKill = yield.getOrDefault(type, 0D);
+            double hourly = perKill * killsPerHour;
+            String roi = hourly > 0D ? String.format(Locale.US, "%.1fh", item.buyPrice() / hourly) : "N/A";
+            plugin.msg(sender, "&d" + pretty(item.id()) + " &7Cost &f" + plugin.money(item.buyPrice())
+                    + " &7Est/h &a" + plugin.money(hourly) + " &7ROI &f" + roi);
+        }
+        plugin.msg(sender, "&7Tune estimator: &feco.estimated-kills-per-hour-per-spawner&7 in config.yml.");
+    }
+
+    private Map<String, Double> primarySellYieldPerKill() {
+        Map<String, Double> out = new LinkedHashMap<>();
+        out.put("CHICKEN", sell("feather", 1D));
+        out.put("PIG", 0D);
+        out.put("COW", sell("leather", 1D));
+        out.put("ZOMBIE", sell("rotten_flesh", 1D));
+        out.put("SKELETON", sell("bone", 1D) + sell("arrow", 1D));
+        out.put("POLAR_BEAR", 0D);
+        out.put("BLAZE", sell("blaze_rod", 0.5D));
+        out.put("EVOKER", sell("emerald", 0.5D));
+        out.put("IRON_GOLEM", sell("iron_ingot", 4D));
+        return out;
+    }
+
+    private double sell(String id, double averageAmount) {
+        for (ShopSection section : catalog.sections()) for (ShopItem item : section.items()) {
+            if (item.id().equalsIgnoreCase(id) && item.canSell()) return item.sellPrice() * averageAmount;
+        }
+        return 0D;
+    }
+
     private void printHelp(CommandSender sender) {
         plugin.msg(sender, "&e/mshop edit");
         plugin.msg(sender, "&e/mshop reload");
+        plugin.msg(sender, "&e/mshop stats <24h|7d|all> &7- economy injection report");
+        plugin.msg(sender, "&e/mshop eco &7- spawner ROI estimate");
         plugin.msg(sender, "&e/mshop setprice <price> &7(hold the exact item)");
         plugin.msg(sender, "&e/mshop setprice <section> <item> <buy|sell> <price|-1>");
         plugin.msg(sender, "&e/mshop addhand <section> <id> <buy> <sell> &7(id retained for compatibility; exact item is preserved)");
