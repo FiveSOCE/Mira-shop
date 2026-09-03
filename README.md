@@ -4,9 +4,9 @@ MiraShop is the first-party GUI economy shop for the Mira Minecraft plugin suite
 
 ## Download
 
-**Current release: v0.1.5**
+**Current release: v0.1.6**
 
-[Download MiraShop-0.1.5.jar](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.5/MiraShop-0.1.5.jar)
+[Download MiraShop-0.1.6.jar](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.6/MiraShop-0.1.6.jar)
 
 [View all releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
@@ -19,11 +19,96 @@ MiraShop is the first-party GUI economy shop for the Mira Minecraft plugin suite
 - EssentialsX recommended for worth synchronisation
 - MiraSpawners recommended for typed spawner support
 
-## v0.1.5 economy rebalance
+## v0.1.6 economy intelligence and trading QoL
 
-MiraShop v0.1.5 applies the new Factions economy baseline across every active preset category while keeping the intentionally blocked equipment categories excluded.
+### Shop search
 
-Updated categories:
+```text
+/shop search <item>
+```
+
+Searches all sections the player can access and shows matching item names, section, trading mode, buy price and sell price.
+
+### Trading modes
+
+Every shop item now clearly displays one of:
+
+- Buy Only
+- Sell Only
+- Buy & Sell
+- Disabled
+
+The existing `buy: -1` and `sell: -1` controls remain the source of truth.
+
+### Bulk buying
+
+Transaction menus provide:
+
+```text
+Buy 1
+Buy 16
+Buy 32
+Buy 64
+```
+
+Large purchases use a configurable safety confirmation. By default, any purchase worth **$500,000 or more** requires the player to click the same Buy button again within 10 seconds.
+
+Config:
+
+```yaml
+shop:
+  buy-confirmation: true
+  buy-confirmation-threshold: 500000.0
+  buy-confirmation-seconds: 10
+```
+
+### Economy analytics
+
+MiraShop records successful purchases and sales into `economy-stats.yml` using hourly aggregates plus all-time totals.
+
+```text
+/mshop stats 24h
+/mshop stats 7d
+/mshop stats all
+```
+
+Reports include:
+
+- money created by player sales
+- money removed by shop purchases
+- net shop economy injection
+- top money-generating items
+- units sold
+- per-item net injection
+
+Hourly history is retained for 15 days while all-time totals remain persistent.
+
+### Spawner ROI estimator
+
+```text
+/mshop eco
+```
+
+Shows each configured spawner's:
+
+- purchase price
+- estimated income per hour
+- estimated break-even time
+
+The estimator uses current MiraShop sell values for each mob's primary sellable drops. It intentionally excludes Looting and secondary/unconfigured loot.
+
+The assumed per-spawner throughput is configurable:
+
+```yaml
+eco:
+  estimated-kills-per-hour-per-spawner: 144.0
+```
+
+This lets the estimate be tuned later using actual server observations.
+
+## v0.1.5 economy baseline
+
+The active preset categories are:
 
 - Blocks
 - Farming
@@ -33,7 +118,7 @@ Updated categories:
 - Redstone
 - Spawners
 
-A one-time v0.1.5 migration updates the known Mira preset entries inside an existing `shops.yml`. Custom/admin-added shop entries are left untouched. Once applied, the migration is marked complete and does not overwrite later manual edits.
+A one-time v0.1.5 migration updates known Mira preset entries inside an existing `shops.yml`. Custom/admin-added entries are left untouched.
 
 ### Spawner progression
 
@@ -65,13 +150,9 @@ Typed spawners remain buy-only.
 | Iron Ingot | $40.00 |
 | Emerald | $85.00 |
 
-The full preset economy is stored in `src/main/resources/shops.yml` and migrated into existing installations automatically.
-
 ## Custom-item support
 
-MiraShop shop entries preserve exact `ItemStack` templates instead of collapsing everything to a Bukkit `Material`.
-
-This preserves configured:
+MiraShop entries preserve exact `ItemStack` templates, including:
 
 - custom names
 - lore
@@ -80,62 +161,31 @@ This preserves configured:
 - enchantments
 - MiraSpawners mob-type metadata
 
-The admin GUI's **Add Held Item** button saves the exact item in the player's hand. Buying that entry recreates the configured template. Custom items are sellable only when the inventory item exactly matches a configured shop template, so arbitrary named/PDC items remain protected.
+The admin GUI's **Add Held Item** button saves the exact held item. Arbitrary unconfigured named/PDC/custom items remain protected from selling.
 
 ## Player commands
 
-- `/shop` - open the main shop
-- `/shop <section>` - open a section directly
-- `/sell`, `/sellhand`, `/sell hand` - open the protected sell GUI
-- `/sellall hand`
-- `/sellall inventory`
-- `/sellall <material>`
+```text
+/shop
+/shop <section>
+/shop search <item>
+/sell
+/sellhand
+/sell hand
+/sellall hand
+/sellall inventory
+/sellall <material>
+```
 
-## Shop GUI
-
-The main shop is a compact 9x3 menu using the Mira visual language:
-
-- glowing grey stained-glass border/filler
-- non-italic item names and lore
-- seven shop sections across the middle row
-- Gold Ingot balance display in the bottom centre showing the player's live Vault balance
-- no Close button
-
-Preset sections:
-
-- Blocks
-- Farming
-- Food
-- Ores & Minerals
-- Mob Drops
-- Redstone
-- Spawners
-
-Tools, Armor, Brewing and Misc are removed automatically from existing `shops.yml` files.
-
-Armor, weapons and tools are not sellable through MiraShop. Existing sell prices on those materials are automatically disabled.
-
-## Sell GUI
-
-`/sell`, `/sellhand` and `/sell hand` open a protected 9x4 sell inventory.
-
-- Sellable stacks show the real item and value.
-- Unsellable or unconfigured custom stacks show as barriers.
-- Exact configured custom-item templates can be sold.
-- Arbitrary named/PDC/custom-model/enchanted items remain protected.
-- The bottom-centre **Sell Inventory** button sells every eligible configured item in the full player inventory.
-
-## Essentials worth synchronisation
-
-Normal material sell prices are synchronized into Essentials worth data on startup/reload. Typed/custom shop entries retain their MiraShop-specific identity and are not collapsed into a generic spawner identity.
-
-Admin commands:
+## Admin commands
 
 ```text
 /mshop
 /mshop edit
 /mshop reload
-/mshop setprice <price>                 # hold the exact item
+/mshop stats <24h|7d|all>
+/mshop eco
+/mshop setprice <price>
 /mshop setprice <section> <item> <buy|sell> <price|-1>
 /mshop addhand <section> <id> <buy> <sell>
 /mshop remove <section> <item>
@@ -155,6 +205,7 @@ Admin commands:
 
 - `config.yml`
 - `shops.yml`
+- `economy-stats.yml`
 
 ## Building
 
@@ -165,5 +216,5 @@ gradle clean build
 Build output:
 
 ```text
-build/libs/MiraShop-0.1.5.jar
+build/libs/MiraShop-0.1.6.jar
 ```
