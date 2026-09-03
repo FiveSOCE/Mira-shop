@@ -1,0 +1,40 @@
+name: Release v0.1.5
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-v0.1.5.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tested source
+        uses: actions/checkout@v4
+        with:
+          ref: d1052abcd06124608013accf4f12f7039a7e3890
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10'
+      - name: Build
+        run: gradle clean build --stacktrace
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.1.5 \
+            build/libs/MiraShop-0.1.5.jar \
+            --target d1052abcd06124608013accf4f12f7039a7e3890 \
+            --title "MiraShop v0.1.5" \
+            --notes "Full MiraShop economy rebalance. Updates Blocks, Farming, Food, Ores & Minerals, Mob Drops, Redstone and typed Spawner prices to the new Factions economy baseline. Existing shops.yml files receive a one-time migration of known preset entries while custom/admin-added items remain untouched. Spawners remain buy-only and typed custom-item support from v0.1.4 is preserved."
