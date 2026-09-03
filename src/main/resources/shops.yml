@@ -66,7 +66,7 @@ sections:
     items:
       coal: {material: COAL, buy: 12.0, sell: 3.0}
       raw_iron: {material: RAW_IRON, buy: 20.0, sell: 5.0}
-      iron_ingot: {material: IRON_INGOT, buy: 28.0, sell: 7.0}
+      iron_ingot: {material: IRON_INGOT, buy: 28.0, sell: 85.0}
       raw_copper: {material: RAW_COPPER, buy: 8.0, sell: 2.0}
       copper_ingot: {material: COPPER_INGOT, buy: 12.0, sell: 3.0}
       raw_gold: {material: RAW_GOLD, buy: 40.0, sell: 10.0}
@@ -74,7 +74,7 @@ sections:
       redstone: {material: REDSTONE, buy: 10.0, sell: 2.0}
       lapis_lazuli: {material: LAPIS_LAZULI, buy: 10.0, sell: 2.0}
       quartz: {material: QUARTZ, buy: 18.0, sell: 4.0}
-      emerald: {material: EMERALD, buy: 120.0, sell: 30.0}
+      emerald: {material: EMERALD, buy: 120.0, sell: 100.0}
       diamond: {material: DIAMOND, buy: 250.0, sell: 65.0}
       netherite_scrap: {material: NETHERITE_SCRAP, buy: 1800.0, sell: 450.0}
       netherite_ingot: {material: NETHERITE_INGOT, buy: 8000.0, sell: 2000.0}
@@ -83,13 +83,16 @@ sections:
     name: "&cMob Drops"
     icon: ROTTEN_FLESH
     items:
-      rotten_flesh: {material: ROTTEN_FLESH, buy: 4.0, sell: 1.0}
-      bone: {material: BONE, buy: 8.0, sell: 2.0}
+      rotten_flesh: {material: ROTTEN_FLESH, buy: 4.0, sell: 10.0}
+      bone: {material: BONE, buy: 8.0, sell: 12.0}
+      arrow: {material: ARROW, buy: 20.0, sell: 15.0}
+      leather: {material: LEATHER, buy: 12.0, sell: 4.5}
+      feather: {material: FEATHER, buy: 8.0, sell: 3.5}
       string: {material: STRING, buy: 8.0, sell: 2.0}
       spider_eye: {material: SPIDER_EYE, buy: 10.0, sell: 2.5}
-      gunpowder: {material: GUNPOWDER, buy: 18.0, sell: 4.0}
+      gunpowder: {material: GUNPOWDER, buy: 18.0, sell: 80.0}
       ender_pearl: {material: ENDER_PEARL, buy: 60.0, sell: 15.0}
-      blaze_rod: {material: BLAZE_ROD, buy: 80.0, sell: 20.0}
+      blaze_rod: {material: BLAZE_ROD, buy: 80.0, sell: 65.0}
       ghast_tear: {material: GHAST_TEAR, buy: 180.0, sell: 45.0}
       slime_ball: {material: SLIME_BALL, buy: 20.0, sell: 5.0}
       magma_cream: {material: MAGMA_CREAM, buy: 30.0, sell: 7.5}
@@ -116,4 +119,48 @@ sections:
     name: "&5Spawners"
     icon: SPAWNER
     items:
-      spawner: {material: SPAWNER, buy: -1, sell: -1}
+      chicken_spawner:
+        material: SPAWNER
+        spawner-type: CHICKEN
+        buy: 5000.0
+        sell: -1
+      pig_spawner:
+        material: SPAWNER
+        spawner-type: PIG
+        buy: 20000.0
+        sell: -1
+      cow_spawner:
+        material: SPAWNER
+        spawner-type: COW
+        buy: 20000.0
+        sell: -1
+      zombie_spawner:
+        material: SPAWNER
+        spawner-type: ZOMBIE
+        buy: 150000.0
+        sell: -1
+      skeleton_spawner:
+        material: SPAWNER
+        spawner-type: SKELETON
+        buy: 200000.0
+        sell: -1
+      polar_bear_spawner:
+        material: SPAWNER
+        spawner-type: POLAR_BEAR
+        buy: 400000.0
+        sell: -1
+      blaze_spawner:
+        material: SPAWNER
+        spawner-type: BLAZE
+        buy: 550000.0
+        sell: -1
+      evoker_spawner:
+        material: SPAWNER
+        spawner-type: EVOKER
+        buy: 750000.0
+        sell: -1
+      iron_golem_spawner:
+        material: SPAWNER
+        spawner-type: IRON_GOLEM
+        buy: 1250000.0
+        sell: -1
