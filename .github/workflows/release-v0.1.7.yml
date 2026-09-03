@@ -1,0 +1,40 @@
+name: Release v0.1.7
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-v0.1.7.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tested source
+        uses: actions/checkout@v4
+        with:
+          ref: 0c60ed378fd93acbe029d25380084e13f348ef13
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10'
+      - name: Build
+        run: gradle clean build --stacktrace
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.1.7 \
+            build/libs/MiraShop-0.1.7.jar \
+            --target 0c60ed378fd93acbe029d25380084e13f348ef13 \
+            --title "MiraShop v0.1.7" \
+            --notes "Economy export update. Adds /mshop export, producing a timestamped CSV containing every active shop entry, buy/sell prices and mode, all-time units bought/sold, money spent/created, and net economy injection. Existing economy analytics and custom-item support remain unchanged."
