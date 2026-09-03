@@ -1,12 +1,12 @@
 # MiraShop
 
-MiraShop is the first-party GUI economy shop for the Mira Minecraft plugin suite.
+First-party GUI economy shop for the Mira Minecraft plugin suite.
 
 ## Download
 
-**Current release: v0.1.7**
+Current release: **v0.1.8**
 
-[Download MiraShop-0.1.7.jar](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.7/MiraShop-0.1.7.jar)
+[**Download MiraShop v0.1.8**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.8/MiraShop-0.1.8.jar)
 
 [View all releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
@@ -15,175 +15,46 @@ MiraShop is the first-party GUI economy shop for the Mira Minecraft plugin suite
 - Paper 1.21.11
 - Java 21
 - Vault
-- A Vault-compatible economy provider
+- Vault-compatible economy provider
 - EssentialsX recommended for worth synchronisation
-- MiraSpawners recommended for typed spawner support
+- MiraSpawners recommended for typed-spawner support
 
-## v0.1.7 economy export
+## v0.1.8 temporary sale events
 
-```text
-/mshop export
-```
+Temporary sale events modify effective prices at runtime without changing permanent values in `shops.yml`.
 
-Exports a timestamped CSV to:
+Scopes:
 
 ```text
-plugins/MiraShop/exports/economy-YYYYMMdd-HHmmss.csv
+all
+section:<section>
+item:<item>
 ```
 
-The export contains every active catalog entry with:
+Examples:
 
-- section
-- item ID
-- material
-- buy price
-- sell price
-- Buy Only / Sell Only / Buy & Sell / Disabled mode
-- all-time units bought
-- money spent through purchases
-- all-time units sold
-- money created through sales
-- net economy injection
+```text
+/mshop sale start weekend 20 0 120 all
+/mshop sale start grinder 15 25 60 section:spawners
+/mshop sale start igsale 25 0 30 item:iron_golem_spawner
+/mshop sale list
+/mshop sale stop <id>
+```
 
-This is designed for balancing in Excel, Sheets or other analysis tools without changing any shop values automatically.
+Sale-aware pricing is shown in the GUI and used by purchase confirmation. Permanent base prices remain untouched.
 
-## v0.1.6 economy intelligence and trading QoL
-
-### Shop search
+## Economy tools
 
 ```text
 /shop search <item>
-```
-
-Searches all sections the player can access and shows matching item names, section, trading mode, buy price and sell price.
-
-### Trading modes
-
-Every shop item clearly displays one of:
-
-- Buy Only
-- Sell Only
-- Buy & Sell
-- Disabled
-
-The existing `buy: -1` and `sell: -1` controls remain the source of truth.
-
-### Bulk buying
-
-Transaction menus provide:
-
-```text
-Buy 1
-Buy 16
-Buy 32
-Buy 64
-```
-
-Large purchases use a configurable safety confirmation. By default, any purchase worth **$500,000 or more** requires the player to click the same Buy button again within 10 seconds.
-
-### Economy analytics
-
-MiraShop records successful purchases and sales into `economy-stats.yml` using hourly aggregates plus all-time totals.
-
-```text
-/mshop stats 24h
-/mshop stats 7d
-/mshop stats all
-```
-
-Reports include money created by player sales, money removed by purchases, net shop economy injection, top money-generating items, units sold and per-item net injection.
-
-### Spawner ROI estimator
-
-```text
-/mshop eco
-```
-
-Shows each configured spawner's purchase price, estimated income per hour and estimated break-even time.
-
-## v0.1.5 economy baseline
-
-The active preset categories are Blocks, Farming, Food, Ores & Minerals, Mob Drops, Redstone and Spawners.
-
-Typed spawners remain buy-only.
-
-| Spawner | Buy price |
-| --- | ---: |
-| Chicken | $50,000 |
-| Pig | $75,000 |
-| Cow | $100,000 |
-| Zombie | $175,000 |
-| Skeleton | $225,000 |
-| Polar Bear | $350,000 |
-| Blaze | $650,000 |
-| Evoker | $1,250,000 |
-| Iron Golem | $3,000,000 |
-
-Key farm sell values:
-
-| Item | Sell value each |
-| --- | ---: |
-| Rotten Flesh | $5.00 |
-| Bone | $8.00 |
-| Arrow | $6.00 |
-| Leather | $4.00 |
-| Feather | $3.00 |
-| Gunpowder | $40.00 |
-| Blaze Rod | $50.00 |
-| Iron Ingot | $40.00 |
-| Emerald | $85.00 |
-
-## Custom-item support
-
-MiraShop entries preserve exact `ItemStack` templates, including custom names, lore, PersistentDataContainer data, custom model data, enchantments and MiraSpawners mob-type metadata.
-
-The admin GUI's **Add Held Item** button saves the exact held item. Arbitrary unconfigured named/PDC/custom items remain protected from selling.
-
-## Player commands
-
-```text
-/shop
-/shop <section>
-/shop search <item>
-/sell
-/sellhand
-/sell hand
-/sellall hand
-/sellall inventory
-/sellall <material>
-```
-
-## Admin commands
-
-```text
-/mshop
-/mshop edit
-/mshop reload
 /mshop stats <24h|7d|all>
 /mshop eco
 /mshop export
-/mshop setprice <price>
-/mshop setprice <section> <item> <buy|sell> <price|-1>
-/mshop addhand <section> <id> <buy> <sell>
-/mshop remove <section> <item>
 ```
 
-## Permissions
+MiraShop provides Buy Only / Sell Only / Buy & Sell modes, bulk buying, expensive-purchase confirmation, economy transaction analytics, spawner ROI estimates and CSV economy exports.
 
-- `mirashop.use`
-- `mirashop.buy`
-- `mirashop.sell`
-- `mirashop.sellall`
-- `mirashop.section.*`
-- `mirashop.section.<section>`
-- `mirashop.admin`
-
-## Files
-
-- `config.yml`
-- `shops.yml`
-- `economy-stats.yml`
-- `exports/*.csv`
+Typed spawners preserve exact MiraSpawners item identity and remain configurable independently from vanilla materials.
 
 ## Building
 
@@ -191,8 +62,8 @@ The admin GUI's **Add Held Item** button saves the exact held item. Arbitrary un
 gradle clean build
 ```
 
-Build output:
+Output:
 
 ```text
-build/libs/MiraShop-0.1.7.jar
+build/libs/MiraShop-0.1.8.jar
 ```
