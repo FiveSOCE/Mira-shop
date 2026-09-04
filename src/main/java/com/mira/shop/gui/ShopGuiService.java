@@ -62,20 +62,19 @@ public final class ShopGuiService {
 
     public void openTransaction(Player player, String sectionId, ShopItem item) {
         ShopHolder holder = new ShopHolder(ShopHolder.Type.TRANSACTION, sectionId, item.id());
-        Inventory inv = Bukkit.createInventory(holder, 36, Text.c("&5" + pretty(item.id())));
+        Inventory inv = Bukkit.createInventory(holder, 27, Text.c("&5" + pretty(item.id())));
         holder.bind(inv);
         fill(inv);
-        inv.setItem(13, display(item));
+        inv.setItem(4, display(item));
         double buy = plugin.sales().buyPrice(item);
         double sell = plugin.sales().sellPrice(item);
-        inv.setItem(19, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 1", List.of("&7Cost: &f" + price(buy, 1, item.canBuy()))));
-        inv.setItem(20, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 16", List.of("&7Cost: &f" + price(buy, 16, item.canBuy()))));
-        inv.setItem(21, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 32", List.of("&7Cost: &f" + price(buy, 32, item.canBuy()))));
-        inv.setItem(22, button(Material.LIME_STAINED_GLASS_PANE, "&aBuy 64", List.of("&7Cost: &f" + price(buy, 64, item.canBuy()))));
-        inv.setItem(24, button(Material.RED_STAINED_GLASS_PANE, "&cSell 1", List.of("&7Value: &f" + price(sell, 1, item.canSell()))));
-        inv.setItem(25, button(Material.RED_STAINED_GLASS_PANE, "&cSell 16", List.of("&7Value: &f" + price(sell, 16, item.canSell()))));
-        inv.setItem(26, button(Material.RED_STAINED_GLASS_PANE, "&cSell All", List.of("&7You have sellable: &f" + transactions.count(player, item))));
-        inv.setItem(31, button(Material.ARROW, "&cBack", List.of()));
+        inv.setItem(10, buttonAmount(Material.GOLD_INGOT, 64, "&aBuy 64", List.of("&7Cost: &f" + price(buy, 64, item.canBuy()))));
+        inv.setItem(11, buttonAmount(Material.GOLD_INGOT, 10, "&aBuy 10", List.of("&7Cost: &f" + price(buy, 10, item.canBuy()))));
+        inv.setItem(12, buttonAmount(Material.GOLD_INGOT, 1, "&aBuy 1", List.of("&7Cost: &f" + price(buy, 1, item.canBuy()))));
+        inv.setItem(14, buttonAmount(Material.REDSTONE, 1, "&cSell 1", List.of("&7Value: &f" + price(sell, 1, item.canSell()))));
+        inv.setItem(15, buttonAmount(Material.REDSTONE, 10, "&cSell 10", List.of("&7Value: &f" + price(sell, 10, item.canSell()))));
+        inv.setItem(16, buttonAmount(Material.REDSTONE, 64, "&cSell 64", List.of("&7Value: &f" + price(sell, 64, item.canSell()))));
+        inv.setItem(22, button(Material.ARROW, "&cBack", List.of()));
         player.openInventory(inv);
     }
 
@@ -102,14 +101,13 @@ public final class ShopGuiService {
         ShopItem item = section.items().stream().filter(x -> x.id().equals(holder.item())).findFirst().orElse(null);
         if (item == null) return;
         switch (slot) {
-            case 19 -> requestBuy(player, item, 1);
-            case 20 -> requestBuy(player, item, 16);
-            case 21 -> requestBuy(player, item, 32);
-            case 22 -> requestBuy(player, item, 64);
-            case 24 -> transactions.sell(player, item, 1);
-            case 25 -> transactions.sell(player, item, 16);
-            case 26 -> transactions.sellAll(player, item);
-            case 31 -> { openSection(player, section); return; }
+            case 10 -> requestBuy(player, item, 64);
+            case 11 -> requestBuy(player, item, 10);
+            case 12 -> requestBuy(player, item, 1);
+            case 14 -> transactions.sell(player, item, 1);
+            case 15 -> transactions.sell(player, item, 10);
+            case 16 -> transactions.sell(player, item, 64);
+            case 22 -> { openSection(player, section); return; }
             default -> { return; }
         }
         openTransaction(player, section.id(), item);
@@ -189,6 +187,7 @@ public final class ShopGuiService {
     }
 
     private static ItemStack button(Material material, String name, List<String> lore) { ItemStack item = new ItemStack(material); ItemMeta meta = item.getItemMeta(); meta.displayName(Text.c(name)); meta.lore(lore.stream().map(Text::c).toList()); item.setItemMeta(meta); return item; }
+    private static ItemStack buttonAmount(Material material, int amount, String name, List<String> lore) { ItemStack item = button(material, name, lore); item.setAmount(Math.max(1, Math.min(material.getMaxStackSize(), amount))); return item; }
     private static String pretty(String input) { StringBuilder out = new StringBuilder(); for (String part : input.toLowerCase().split("_")) { if (!out.isEmpty()) out.append(' '); out.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1)); } return out.toString(); }
     private record PendingBuy(String itemId, int amount, long createdAt) {}
 }
