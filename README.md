@@ -4,7 +4,7 @@ MiraShop is the first-party GUI economy shop for the Mira Paper server suite. It
 
 ## Download
 
-[**Download MiraShop v0.1.8**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.8/MiraShop-0.1.8.jar)
+[**Download MiraShop v0.1.9**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.9/MiraShop-0.1.9.jar)
 
 ## Requirements / Dependencies
 
@@ -17,7 +17,7 @@ MiraShop is the first-party GUI economy shop for the Mira Paper server suite. It
 
 ## How MiraShop Works
 
-MiraShop stores permanent shop sections/items and their base buy/sell prices in its shop data. Players browse the GUI by section, search for items, buy items when `mirashop.buy` is allowed and sell items when `mirashop.sell` is allowed. Items can be configured as Buy Only, Sell Only or Buy & Sell. Bulk-buying and expensive-purchase confirmation are handled by the GUI to reduce accidental purchases.
+MiraShop stores permanent shop sections/items and their base buy/sell prices in its shop data. Players browse the GUI by section, search for items, buy items when `mirashop.buy` is allowed and sell items when `mirashop.sell` is allowed. Items can be configured as Buy Only, Sell Only or Buy & Sell. The transaction GUI uses a compact 3-row layout with the selected item centered at the top. Buy controls sit on the left as `Buy 64`, `Buy 10`, `Buy 1`, while sell controls sit on the right as `Sell 1`, `Sell 10`, `Sell 64`, keeping the 1-item options closest to the selected item. Expensive-purchase confirmation is still enforced where configured.
 
 `/sellall` sells eligible items from the player's hand or inventory using MiraShop's current matching/pricing rules. Typed MiraSpawners items retain their exact spawner identity instead of collapsing to generic vanilla spawner material pricing.
 
