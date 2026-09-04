@@ -1,10 +1,10 @@
 # MiraShop
 
-MiraShop is the first-party GUI economy shop for the Mira Paper server suite. It provides configurable buy/sell sections, bulk transactions, typed-spawner support, inventory selling, temporary sales and economy analytics backed by Vault.
+MiraShop v0.1.10 fixes the runtime plugin metadata so Paper reports the same version as the published JAR. MiraShop is the first-party GUI economy shop for the Mira Paper server suite. It provides configurable buy/sell sections, bulk transactions, typed-spawner support, inventory selling, temporary sales and economy analytics backed by Vault.
 
 ## Download
 
-[**Download MiraShop v0.1.9**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.9/MiraShop-0.1.9.jar)
+[**Download MiraShop v0.1.10**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.10/MiraShop-0.1.10.jar)
 
 ## Requirements / Dependencies
 
