@@ -1,10 +1,12 @@
 # MiraShop
 
-MiraShop v0.1.10 fixes the runtime plugin metadata so Paper reports the same version as the published JAR. MiraShop is the first-party GUI economy shop for the Mira Paper server suite. It provides configurable buy/sell sections, bulk transactions, typed-spawner support, inventory selling, temporary sales and economy analytics backed by Vault.
+MiraShop v0.1.11 is the first-party GUI economy shop for the Mira Paper server suite. It provides configurable buy/sell sections, bulk transactions, typed-spawner support, inventory selling, temporary sales and economy analytics backed by Vault, now with optional centralized MiraCosmetics transaction audio.
 
 ## Download
 
-[**Download MiraShop v0.1.10**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.10/MiraShop-0.1.10.jar)
+[**Download MiraShop v0.1.11**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.11/MiraShop-0.1.11.jar)
+
+[View All Releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
 ## Requirements / Dependencies
 
@@ -14,6 +16,7 @@ MiraShop v0.1.10 fixes the runtime plugin metadata so Paper reports the same ver
 - A Vault-compatible economy provider
 - EssentialsX recommended for worth synchronisation
 - MiraSpawners recommended for typed-spawner support
+- MiraCosmetics optional for centralized audio effects
 
 ## How MiraShop Works
 
@@ -55,3 +58,7 @@ Temporary sale events apply runtime price modifiers without rewriting permanent 
 | `mirashop.sellall` | Everyone | Allows `/sellall`. |
 | `mirashop.admin` | OP | Allows shop editing, reloads, pricing, sales and analytics administration. |
 | `mirashop.section.*` | Everyone | Wildcard/default access to shop sections; section-specific nodes can be used to restrict individual sections. |
+
+## MiraCosmetics Audio Integration (0.1.11)
+
+MiraCosmetics audio hooks cover successful purchases, sales and bulk inventory sales. One completed transaction emits one audio event.
