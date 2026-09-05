@@ -2,6 +2,7 @@ package com.mira.shop.service;
 
 import com.mira.shop.MiraShopPlugin;
 import com.mira.shop.model.ShopItem;
+import com.mira.shop.util.CosmeticsBridge;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -37,6 +38,7 @@ public final class TransactionService {
             return false;
         }
         plugin.stats().recordBuy(item, amount, total);
+        CosmeticsBridge.play(player, "economy_purchase");
         plugin.msg(player, plugin.message("bought").replace("%amount%", String.valueOf(amount)).replace("%item%", displayName(item)).replace("%price%", plugin.money(total)));
         return true;
     }
@@ -53,6 +55,7 @@ public final class TransactionService {
         if (total < 0D || !economy.deposit(player, total)) return false;
         remove(player, item, amount);
         plugin.stats().recordSell(item, amount, total);
+        CosmeticsBridge.play(player, "economy_sale");
         plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(amount)).replace("%item%", displayName(item)).replace("%price%", plugin.money(total)));
         return true;
     }
@@ -80,6 +83,7 @@ public final class TransactionService {
         ItemStack sold = stack.clone();
         player.getInventory().setItem(playerSlot, null);
         plugin.stats().recordSell(item, sold.getAmount(), total);
+        CosmeticsBridge.play(player, "economy_sale");
         plugin.msg(player, plugin.message("sold").replace("%amount%", String.valueOf(sold.getAmount())).replace("%item%", displayName(item)).replace("%price%", plugin.money(total)));
         return true;
     }
@@ -110,6 +114,7 @@ public final class TransactionService {
         if (!economy.deposit(player, total)) return;
         player.getInventory().setStorageContents(result);
         byItem.forEach((item, amount) -> plugin.stats().recordSell(item, amount, plugin.sales().sellPrice(item) * amount));
+        CosmeticsBridge.play(player, "economy_bulk_sale");
         plugin.msg(player, "&aSold &f" + sold + "&a items for &f" + plugin.money(total) + "&a.");
     }
 
