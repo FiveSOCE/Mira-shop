@@ -27,17 +27,17 @@ jobs:
       - name: Upload plugin jar
         uses: actions/upload-artifact@v4
         with:
-          name: MiraShop-0.1.10
-          path: build/libs/MiraShop-0.1.10.jar
-      - name: Publish v0.1.10 release if missing
+          name: MiraShop-0.1.11
+          path: build/libs/MiraShop-0.1.11.jar
+      - name: Publish v0.1.11 release if missing
         if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if ! gh release view v0.1.10 >/dev/null 2>&1; then
-            gh release create v0.1.10 \
-              build/libs/MiraShop-0.1.10.jar \
+          if ! gh release view v0.1.11 >/dev/null 2>&1; then
+            gh release create v0.1.11 \
+              build/libs/MiraShop-0.1.11.jar \
               --target "${{ github.sha }}" \
-              --title "MiraShop v0.1.10" \
-              --notes "Runtime metadata patch. Aligns Paper plugin version reporting with the published MiraShop v0.1.10 JAR while retaining the v0.1.9 compact transaction GUI and temporary-sale features."
+              --title "MiraShop v0.1.11" \
+              --notes "Adds optional MiraCosmetics audio hooks for successful purchases, sales and bulk inventory sales while keeping one sound per transaction."
           fi
