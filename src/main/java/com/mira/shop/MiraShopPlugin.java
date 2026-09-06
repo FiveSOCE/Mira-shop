@@ -1,5 +1,7 @@
 package com.mira.shop;
 
+import com.mira.shop.api.SpawnerPriceCacheEvent;
+import com.mira.shop.api.SpawnerPriceService;
 import com.mira.shop.command.AdminCommand;
 import com.mira.shop.command.SellAllCommand;
 import com.mira.shop.command.ShopCommand;
@@ -12,6 +14,7 @@ import com.mira.shop.util.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.text.DecimalFormat;
@@ -25,6 +28,7 @@ public final class MiraShopPlugin extends JavaPlugin {
     private EconomyService economy;
     private EconomyStatsService stats;
     private SaleEventService sales;
+    private CachedSpawnerPriceService spawnerPrices;
 
     @Override
     public void onEnable() {
@@ -32,6 +36,9 @@ public final class MiraShopPlugin extends JavaPlugin {
         EconomyRebalanceMigration.apply(this);
         catalog = new ShopCatalog(this);
         catalog.load();
+        spawnerPrices = new CachedSpawnerPriceService();
+        spawnerPrices.rebuild(catalog);
+        getServer().getServicesManager().register(SpawnerPriceService.class, spawnerPrices, this, ServicePriority.Normal);
         economy = new EconomyService();
         if (!economy.hook()) getLogger().warning("No Vault economy provider detected. Shop transactions will be unavailable until one is present.");
         stats = new EconomyStatsService(this);
@@ -50,7 +57,10 @@ public final class MiraShopPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new AdminMenuListener(adminGui), this);
         getServer().getPluginManager().registerEvents(new SaleCommandListener(this, sales), this);
 
-        Bukkit.getScheduler().runTask(this, this::syncEssentialsWorth);
+        Bukkit.getScheduler().runTask(this, () -> {
+            syncEssentialsWorth();
+            publishSpawnerPriceCache();
+        });
         getLogger().info("MiraShop v" + getPluginMeta().getVersion() + " enabled with " + catalog.sections().size() + " preset sections and " + sales.active().size() + " active sale(s).");
     }
 
@@ -61,7 +71,14 @@ public final class MiraShopPlugin extends JavaPlugin {
         Bukkit.getScheduler().runTask(this, this::syncEssentialsWorth);
     }
 
+    public void publishSpawnerPriceCache() {
+        if (spawnerPrices == null || catalog == null) return;
+        spawnerPrices.rebuild(catalog);
+        Bukkit.getPluginManager().callEvent(new SpawnerPriceCacheEvent(spawnerPrices.buyPrices()));
+    }
+
     public ShopCatalog catalog() { return catalog; }
+    public SpawnerPriceService spawnerPrices() { return spawnerPrices; }
     public EconomyStatsService stats() { return stats; }
     public SaleEventService sales() { return sales; }
 
