@@ -58,6 +58,7 @@ public final class ShopCatalog {
             }
             sections.put(normalized, new ShopSection(normalized, sec.getString("name", sectionId), icon, List.copyOf(items)));
         }
+        plugin.publishSpawnerPriceCache();
     }
 
     private ItemStack readTemplate(ConfigurationSection item, String itemId) {
