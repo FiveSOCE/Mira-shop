@@ -130,7 +130,13 @@ public final class ShopCatalog {
         setSpawnerPreset("zombie_spawner", "ZOMBIE", 150000D);
         setSpawnerPreset("skeleton_spawner", "SKELETON", 200000D);
         setSpawnerPreset("creeper_spawner", "CREEPER", 500000D);
-        setSpawnerPreset("slime_spawner", "SLIME", 600000D);\n        setSpawnerPreset("blaze_spawner", "BLAZE", 750000D);\n        setSpawnerPreset("enderman_spawner", "ENDERMAN", 750000D);\n        setSpawnerPreset("witch_spawner", "WITCH", 1000000D);\n        setSpawnerPreset("guardian_spawner", "GUARDIAN", 1250000D);
+        setSpawnerPreset("spider_spawner", "SPIDER", 200000D);
+        setSpawnerPreset("cave_spider_spawner", "CAVE_SPIDER", 250000D);
+        setSpawnerPreset("slime_spawner", "SLIME", 600000D);
+        setSpawnerPreset("blaze_spawner", "BLAZE", 750000D);
+        setSpawnerPreset("enderman_spawner", "ENDERMAN", 750000D);
+        setSpawnerPreset("witch_spawner", "WITCH", 1000000D);
+        setSpawnerPreset("guardian_spawner", "GUARDIAN", 1250000D);
         setSpawnerPreset("evoker_spawner", "EVOKER", 1500000D);
         setSpawnerPreset("iron_golem_spawner", "IRON_GOLEM", 2500000D);
 
