@@ -102,6 +102,10 @@ public final class MiraShopPlugin extends JavaPlugin {
     public EconomyStatsService stats() { return stats; }
     public SaleEventService sales() { return sales; }
 
+    public void syncEssentialsWorth() {
+        syncFromEssentialsWorth(true);
+    }
+
     private void startWorthWatcher() {
         if (worthSyncTask != null) worthSyncTask.cancel();
         long seconds = Math.max(5L, getConfig().getLong("essentials-worth.sync-seconds", 30L));
