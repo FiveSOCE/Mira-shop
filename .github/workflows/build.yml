@@ -27,17 +27,17 @@ jobs:
       - name: Upload plugin jar
         uses: actions/upload-artifact@v4
         with:
-          name: MiraShop-0.1.12
-          path: build/libs/MiraShop-0.1.12.jar
-      - name: Publish v0.1.12 release if missing
+          name: MiraShop-0.1.13
+          path: build/libs/MiraShop-0.1.13.jar
+      - name: Publish v0.1.13 release if missing
         if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if ! gh release view v0.1.12 >/dev/null 2>&1; then
-            gh release create v0.1.12 \
-              build/libs/MiraShop-0.1.12.jar \
+          if ! gh release view v0.1.13 >/dev/null 2>&1; then
+            gh release create v0.1.13 \
+              build/libs/MiraShop-0.1.13.jar \
               --target "${{ github.sha }}" \
-              --title "MiraShop v0.1.12" \
-              --notes "Adds the public cached typed-spawner buy-price service and SpawnerPriceCacheEvent so MiraFactions can consume price changes without reading MiraShop files."
+              --title "MiraShop v0.1.13" \
+              --notes "Adds a public cached MaterialPriceService exposing normal material buy/sell prices for MiraFactions FTop valuation, while retaining the spawner price API."
           fi
