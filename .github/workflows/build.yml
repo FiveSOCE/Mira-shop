@@ -15,29 +15,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10'
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(sed -n 's/^version = "\([^"]*\)"/\1/p' build.gradle.kts | head -n1)
+          test -n "$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Build
         run: gradle clean build --stacktrace
+
       - name: Upload plugin jar
         uses: actions/upload-artifact@v4
         with:
-          name: MiraShop-0.1.14
-          path: build/libs/MiraShop-0.1.14.jar
-      - name: Publish v0.1.14 release if missing
+          name: MiraShop-${{ steps.version.outputs.version }}
+          path: build/libs/MiraShop-${{ steps.version.outputs.version }}.jar
+          if-no-files-found: error
+
+      - name: Publish release if missing
         if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if ! gh release view v0.1.14 >/dev/null 2>&1; then
-            gh release create v0.1.14 \
-              build/libs/MiraShop-0.1.14.jar \
+          TAG="v$VERSION"
+          JAR="build/libs/MiraShop-$VERSION.jar"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" "$JAR" \
               --target "${{ github.sha }}" \
-              --title "MiraShop v0.1.14" \
-              --notes "Rebalances MiraShop for Factions, expands the catalog with raiding, PvP, utility, Nether/End and decoration sections, adds 15 spawner tiers, and upgrades the main shop GUI to a larger polished storefront."
+              --title "MiraShop $TAG" \
+              --notes "Factions economy/catalog overhaul with one-time migration for existing shops.yml files, expanded categories, polished storefront, conservative renewable sell values, and updated spawner progression."
           fi
