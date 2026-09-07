@@ -22,6 +22,13 @@ public final class ShopCatalog {
     private static final NamespacedKey MIRA_SPAWNER_TYPE = NamespacedKey.fromString("miraspawners:spawner_mob_type");
     private static final String V014_MIGRATION = "meta.migrations.v0_1_4_custom_items";
     private static final String V015_FACTIONS_ECONOMY = "meta.migrations.v0_1_15_factions_economy";
+    private static final String V016_FACTIONS_FINE_TUNE = "meta.migrations.v0_1_16_factions_fine_tune";
+    private static final Set<String> BLOCKED_SHOP_MATERIALS = Set.of(
+            "TRIDENT", "MACE", "SHIELD", "SPEAR", "WIND_CHARGE", "RESPAWN_ANCHOR",
+            "END_CRYSTAL", "TOTEM_OF_UNDYING", "HEAVY_CORE", "BREEZE_ROD",
+            "TRIAL_KEY", "OMINOUS_TRIAL_KEY", "BUNDLE", "RECOVERY_COMPASS",
+            "SHULKER_SHELL"
+    );
 
     private final MiraShopPlugin plugin;
     private final Map<String, ShopSection> sections = new LinkedHashMap<>();
@@ -52,7 +59,7 @@ public final class ShopCatalog {
                 ConfigurationSection item = itemRoot.getConfigurationSection(itemId);
                 if (item == null) continue;
                 ItemStack template = readTemplate(item, itemId);
-                if (template == null || template.getType().isAir()) continue;
+                if (template == null || template.getType().isAir() || blockedFromShop(template.getType())) continue;
                 double buy = item.getDouble("buy", -1D);
                 double sell = restrictedEquipment(template.getType()) ? -1D : item.getDouble("sell", -1D);
                 items.add(new ShopItem(itemId.toLowerCase(Locale.ROOT), template, buy, sell));
@@ -110,6 +117,14 @@ public final class ShopCatalog {
             changed = true;
         }
 
+        if (!yaml.getBoolean(V016_FACTIONS_FINE_TUNE, false)) {
+            applyBundledSections("v0.1.16 Factions fine-tune");
+            yaml.set("sections.pvp", null);
+            yaml.set("sections.nether_end", null);
+            yaml.set(V016_FACTIONS_FINE_TUNE, true);
+            changed = true;
+        }
+
         ConfigurationSection root = yaml.getConfigurationSection("sections");
         if (root != null) for (String sectionId : root.getKeys(false)) {
             ConfigurationSection items = root.getConfigurationSection(sectionId + ".items");
@@ -159,6 +174,10 @@ public final class ShopCatalog {
     }
 
     private void applyV015FactionsEconomy() {
+        applyBundledSections("v0.1.15 Factions economy/catalog");
+    }
+
+    private void applyBundledSections(String migrationName) {
         try (var input = plugin.getResource("shops.yml")) {
             if (input == null) {
                 plugin.getLogger().warning("Could not load bundled shops.yml for v0.1.15 economy migration.");
@@ -191,9 +210,9 @@ public final class ShopCatalog {
                 }
             }
 
-            plugin.getLogger().info("Applied MiraShop v0.1.15 Factions economy/catalog migration.");
+            plugin.getLogger().info("Applied MiraShop " + migrationName + " migration.");
         } catch (Exception ex) {
-            plugin.getLogger().severe("Failed to apply v0.1.15 Factions economy migration: " + ex.getMessage());
+            plugin.getLogger().severe("Failed to apply MiraShop " + migrationName + " migration: " + ex.getMessage());
         }
     }
 
@@ -304,6 +323,12 @@ public final class ShopCatalog {
     }
 
     public synchronized void removeItem(String sectionId, String itemId) { yaml.set("sections." + sectionId + ".items." + itemId, null); saveAndReload(); }
+
+    public static boolean blockedFromShop(Material material) {
+        if (material == null) return true;
+        String n = material.name();
+        return BLOCKED_SHOP_MATERIALS.contains(n) || n.endsWith("_SHULKER_BOX");
+    }
 
     public static boolean restrictedEquipment(Material material) {
         String n = material.name();
