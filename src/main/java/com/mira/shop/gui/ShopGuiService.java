@@ -17,7 +17,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 
 public final class ShopGuiService {
-    private static final List<Integer> MAIN_SECTION_SLOTS = List.of(10, 11, 12, 13, 14, 15, 16);
+    private static final List<Integer> MAIN_SECTION_SLOTS = List.of(
+            10, 11, 12, 13, 14, 15, 16,
+            19, 20, 21, 22, 23, 24, 25,
+            28, 29, 30, 31, 32, 33, 34
+    );
 
     private final MiraShopPlugin plugin;
     private final ShopCatalog catalog;
@@ -34,16 +38,20 @@ public final class ShopGuiService {
 
     public void openMain(Player player) {
         ShopHolder holder = new ShopHolder(ShopHolder.Type.MAIN, "", "");
-        Inventory inv = Bukkit.createInventory(holder, 27, Text.c(plugin.getConfig().getString("shop.title", "&5Mira Shop")));
+        Inventory inv = Bukkit.createInventory(holder, 45, Text.c(plugin.getConfig().getString("shop.title", "&5&lMira Shop &8• &fFactions Market")));
         holder.bind(inv);
         fill(inv);
         List<ShopSection> visible = visibleSections(player);
         for (int i = 0; i < visible.size() && i < MAIN_SECTION_SLOTS.size(); i++) {
             ShopSection section = visible.get(i);
-            inv.setItem(MAIN_SECTION_SLOTS.get(i), button(section.icon(), section.displayName(), List.of("&7Click to browse")));
+            inv.setItem(MAIN_SECTION_SLOTS.get(i), button(section.icon(), section.displayName(), List.of("&8" + section.items().size() + " items", "", "&eClick to browse")));
         }
-        inv.setItem(22, button(Material.GOLD_INGOT, "&eBalance", List.of("&7Current balance: &f" + plugin.money(economy.balance(player)))));
-        if (!plugin.sales().active().isEmpty()) inv.setItem(4, button(Material.FIREWORK_STAR, "&dServer Sale Active", plugin.sales().active().stream().limit(5).map(s -> "&7" + s.id() + " &f" + s.scope() + " &a-" + s.buyDiscountPercent() + "% buy &b+" + s.sellBonusPercent() + "% sell &8(" + s.minutesRemaining() + "m)").toList()));
+        inv.setItem(40, button(Material.GOLD_INGOT, "&6&lYour Balance", List.of("&7Available funds", "&f" + plugin.money(economy.balance(player)))));
+        inv.setItem(4, button(Material.EMERALD, "&5&lMira Shop", List.of(
+                "&7Faction supplies, materials & progression",
+                "&8Buy smart. Sell farmables carefully."
+        )));
+        if (!plugin.sales().active().isEmpty()) inv.setItem(36, button(Material.FIREWORK_STAR, "&d&lServer Sale Active", plugin.sales().active().stream().limit(5).map(s -> "&7" + s.id() + " &f" + s.scope() + " &a-" + s.buyDiscountPercent() + "% buy &b+" + s.sellBonusPercent() + "% sell &8(" + s.minutesRemaining() + "m)").toList()));
         player.openInventory(inv);
     }
 
@@ -51,7 +59,7 @@ public final class ShopGuiService {
         int rows = Math.max(3, Math.min(6, ((section.items().size() + 6) / 7) + 2));
         int size = rows * 9;
         ShopHolder holder = new ShopHolder(ShopHolder.Type.SECTION, section.id(), "");
-        Inventory inv = Bukkit.createInventory(holder, size, Text.c(section.displayName()));
+        Inventory inv = Bukkit.createInventory(holder, size, Text.c("&5Mira Shop &8» " + section.displayName()));
         holder.bind(inv);
         fill(inv);
         List<Integer> slots = contentSlots(size);
@@ -148,7 +156,7 @@ public final class ShopGuiService {
     }
 
     private void fill(Inventory inv) {
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta meta = filler.getItemMeta();
         meta.displayName(Text.c(" "));
         meta.setEnchantmentGlintOverride(true);
