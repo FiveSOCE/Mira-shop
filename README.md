@@ -1,10 +1,10 @@
 # MiraShop
 
-MiraShop v0.1.12 is the first-party GUI economy shop for the Mira Paper server suite. It provides configurable buy/sell sections, bulk transactions, typed-spawner support, inventory selling, temporary sales and economy analytics backed by Vault, now with optional centralized MiraCosmetics transaction audio.
+MiraShop v0.1.14 is the first-party GUI economy shop for the Mira Paper server suite. It provides configurable buy/sell sections, bulk transactions, typed-spawner support, inventory selling, temporary sales and economy analytics backed by Vault, now with optional centralized MiraCosmetics transaction audio.
 
 ## Download
 
-[**Download MiraShop v0.1.12**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.12/MiraShop-0.1.12.jar)
+[**Download MiraShop v0.1.14**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.14/MiraShop-0.1.14.jar)
 
 [View All Releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
@@ -64,3 +64,28 @@ Temporary sale events apply runtime price modifiers without rewriting permanent 
 ## MiraCosmetics Audio Integration (0.1.11)
 
 MiraCosmetics audio hooks cover successful purchases, sales and bulk inventory sales. One completed transaction emits one audio event.
+
+
+## Factions Economy Overhaul (0.1.14)
+
+The default catalog is now tuned around a competitive Factions economy rather than generic survival pricing.
+
+Main storefront sections:
+- Building
+- Farming
+- Food
+- Ores & Wealth
+- Mob Drops
+- Redstone
+- Raiding
+- PvP Supplies
+- Utility & Storage
+- Nether & End
+- Decoration
+- Spawners
+
+The main GUI was expanded to a 5-row storefront with category item counts, a cleaner dark presentation, a balance panel, and sale status.
+
+Renewable/automated sell values are intentionally conservative. High-value mining assets such as Diamond and Netherite retain stronger sell ratios. PvP, raiding, crafted utility and convenience items are predominantly buy-only to prevent crafting arbitrage.
+
+Default spawners now range from Chicken at $25,000 through Iron Golem at $2,500,000, with Creeper, Slime, Blaze, Enderman, Witch and Guardian tiers included.
