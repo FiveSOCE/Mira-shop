@@ -2,6 +2,7 @@ package com.mira.shop;
 
 import com.mira.shop.api.SpawnerPriceCacheEvent;
 import com.mira.shop.api.SpawnerPriceService;
+import com.mira.shop.api.MaterialPriceService;
 import com.mira.shop.command.AdminCommand;
 import com.mira.shop.command.SellAllCommand;
 import com.mira.shop.command.ShopCommand;
@@ -29,6 +30,7 @@ public final class MiraShopPlugin extends JavaPlugin {
     private EconomyStatsService stats;
     private SaleEventService sales;
     private CachedSpawnerPriceService spawnerPrices;
+    private CachedMaterialPriceService materialPrices;
 
     @Override
     public void onEnable() {
@@ -39,6 +41,10 @@ public final class MiraShopPlugin extends JavaPlugin {
         spawnerPrices = new CachedSpawnerPriceService();
         spawnerPrices.rebuild(catalog);
         getServer().getServicesManager().register(SpawnerPriceService.class, spawnerPrices, this, ServicePriority.Normal);
+
+        materialPrices = new CachedMaterialPriceService();
+        materialPrices.rebuild(catalog);
+        getServer().getServicesManager().register(MaterialPriceService.class, materialPrices, this, ServicePriority.Normal);
         economy = new EconomyService();
         if (!economy.hook()) getLogger().warning("No Vault economy provider detected. Shop transactions will be unavailable until one is present.");
         stats = new EconomyStatsService(this);
@@ -68,6 +74,7 @@ public final class MiraShopPlugin extends JavaPlugin {
         reloadConfig();
         catalog.load();
         economy.hook();
+        materialPrices.rebuild(catalog);
         Bukkit.getScheduler().runTask(this, this::syncEssentialsWorth);
     }
 
@@ -79,6 +86,7 @@ public final class MiraShopPlugin extends JavaPlugin {
 
     public ShopCatalog catalog() { return catalog; }
     public SpawnerPriceService spawnerPrices() { return spawnerPrices; }
+    public MaterialPriceService materialPrices() { return materialPrices; }
     public EconomyStatsService stats() { return stats; }
     public SaleEventService sales() { return sales; }
 
