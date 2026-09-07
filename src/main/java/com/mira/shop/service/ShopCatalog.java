@@ -124,25 +124,25 @@ public final class ShopCatalog {
         yaml.set("sections.spawners.icon", "SPAWNER");
         yaml.set("sections.spawners.items.spawner", null);
 
-        setSpawnerPreset("chicken_spawner", "CHICKEN", 5000D);
-        setSpawnerPreset("pig_spawner", "PIG", 20000D);
-        setSpawnerPreset("cow_spawner", "COW", 20000D);
+        setSpawnerPreset("chicken_spawner", "CHICKEN", 25000D);
+        setSpawnerPreset("pig_spawner", "PIG", 50000D);
+        setSpawnerPreset("cow_spawner", "COW", 75000D);
         setSpawnerPreset("zombie_spawner", "ZOMBIE", 150000D);
         setSpawnerPreset("skeleton_spawner", "SKELETON", 200000D);
-        setSpawnerPreset("polar_bear_spawner", "POLAR_BEAR", 400000D);
-        setSpawnerPreset("blaze_spawner", "BLAZE", 550000D);
-        setSpawnerPreset("evoker_spawner", "EVOKER", 750000D);
-        setSpawnerPreset("iron_golem_spawner", "IRON_GOLEM", 1250000D);
+        setSpawnerPreset("creeper_spawner", "CREEPER", 500000D);
+        setSpawnerPreset("slime_spawner", "SLIME", 600000D);\n        setSpawnerPreset("blaze_spawner", "BLAZE", 750000D);\n        setSpawnerPreset("enderman_spawner", "ENDERMAN", 750000D);\n        setSpawnerPreset("witch_spawner", "WITCH", 1000000D);\n        setSpawnerPreset("guardian_spawner", "GUARDIAN", 1250000D);
+        setSpawnerPreset("evoker_spawner", "EVOKER", 1500000D);
+        setSpawnerPreset("iron_golem_spawner", "IRON_GOLEM", 2500000D);
 
-        setSellPreset("mobdrops", "blaze_rod", "BLAZE_ROD", 65D);
-        setSellPreset("mobdrops", "rotten_flesh", "ROTTEN_FLESH", 10D);
-        setSellPreset("mobdrops", "arrow", "ARROW", 15D);
-        setSellPreset("mobdrops", "gunpowder", "GUNPOWDER", 80D);
-        setSellPreset("mobdrops", "bone", "BONE", 12D);
-        setSellPreset("mobdrops", "leather", "LEATHER", 4.5D);
-        setSellPreset("mobdrops", "feather", "FEATHER", 3.5D);
-        setSellPreset("ores", "iron_ingot", "IRON_INGOT", 85D);
-        setSellPreset("ores", "emerald", "EMERALD", 100D);
+        setSellPreset("mobdrops", "blaze_rod", "BLAZE_ROD", 30D);
+        setSellPreset("mobdrops", "rotten_flesh", "ROTTEN_FLESH", 3D);
+        setSellPreset("mobdrops", "arrow", "ARROW", 3D);
+        setSellPreset("mobdrops", "gunpowder", "GUNPOWDER", 20D);
+        setSellPreset("mobdrops", "bone", "BONE", 5D);
+        setSellPreset("mobdrops", "leather", "LEATHER", 5D);
+        setSellPreset("mobdrops", "feather", "FEATHER", 2D);
+        setSellPreset("ores", "iron_ingot", "IRON_INGOT", 15D);
+        setSellPreset("ores", "emerald", "EMERALD", 20D);
     }
 
     private void setSpawnerPreset(String id, String type, double buy) {
