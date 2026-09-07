@@ -3,7 +3,7 @@ currency:
   decimals: 2
 
 shop:
-  title: "&5Mira Shop"
+  title: "&5&lMira Shop &8• &fFactions Market"
   buy-confirmation: true
   buy-confirmation-threshold: 500000.0
   buy-confirmation-seconds: 10
