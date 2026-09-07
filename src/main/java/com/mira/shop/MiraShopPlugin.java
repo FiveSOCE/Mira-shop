@@ -79,9 +79,14 @@ public final class MiraShopPlugin extends JavaPlugin {
     }
 
     public void publishSpawnerPriceCache() {
-        if (spawnerPrices == null || catalog == null) return;
-        spawnerPrices.rebuild(catalog);
-        Bukkit.getPluginManager().callEvent(new SpawnerPriceCacheEvent(spawnerPrices.buyPrices()));
+        if (catalog == null) return;
+        if (spawnerPrices != null) {
+            spawnerPrices.rebuild(catalog);
+            Bukkit.getPluginManager().callEvent(new SpawnerPriceCacheEvent(spawnerPrices.buyPrices()));
+        }
+        if (materialPrices != null) {
+            materialPrices.rebuild(catalog);
+        }
     }
 
     public ShopCatalog catalog() { return catalog; }
