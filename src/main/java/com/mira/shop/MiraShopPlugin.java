@@ -14,8 +14,6 @@ import com.mira.shop.service.*;
 import com.mira.shop.util.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
@@ -24,6 +22,9 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.text.DecimalFormat;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -116,35 +117,49 @@ public final class MiraShopPlugin extends JavaPlugin {
         var essentials = Bukkit.getPluginManager().getPlugin("Essentials");
         if (essentials == null || catalog == null) return;
 
-        File worthFile = new File(essentials.getDataFolder(), "worth.yml");
-        if (!worthFile.isFile()) {
-            if (force) getLogger().warning("Essentials worth.yml not found; MiraShop sell prices were not synced.");
-            return;
-        }
-
-        long modified = worthFile.lastModified();
-        if (!force && modified == lastWorthModified) return;
-
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(worthFile);
-        ConfigurationSection section = yaml.getConfigurationSection("worth");
-        if (section == null) section = yaml;
-
-        Map<Material, Double> prices = new EnumMap<>(Material.class);
-        for (String key : section.getKeys(false)) {
-            Material material = Material.matchMaterial(key);
-            if (material == null) material = Material.matchMaterial(key.toUpperCase(java.util.Locale.ROOT));
-            double value = section.getDouble(key, -1D);
-            if (material != null && Double.isFinite(value) && value >= 0D) {
-                prices.put(material, value);
+        try {
+            Object worth = essentials.getClass().getMethod("getWorth").invoke(essentials);
+            Method getFile = worth.getClass().getMethod("getFile");
+            File worthFile = (File) getFile.invoke(worth);
+            if (worthFile == null || !worthFile.isFile()) {
+                if (force) getLogger().warning("Essentials worth.yml not found; MiraShop sell prices were not synced.");
+                return;
             }
-        }
 
-        int changed = catalog.syncSellPrices(prices);
-        lastWorthModified = modified;
-        materialPrices.rebuild(catalog);
-        if (changed > 0 || force) {
-            getLogger().info("Synced " + changed + " MiraShop sell price(s) from Essentials worth.yml. "
-                    + prices.size() + " worth entr" + (prices.size() == 1 ? "y" : "ies") + " loaded.");
+            long modified = worthFile.lastModified();
+            if (!force && modified == lastWorthModified) return;
+
+            // Reload Essentials' own Worth configuration first so /worth and MiraShop
+            // are reading the exact same in-memory table after a file edit.
+            worth.getClass().getMethod("reloadConfig").invoke(worth);
+
+            Method getPrice = Arrays.stream(worth.getClass().getMethods())
+                    .filter(method -> method.getName().equals("getPrice") && method.getParameterCount() == 2)
+                    .findFirst()
+                    .orElseThrow(() -> new NoSuchMethodException("Essentials Worth#getPrice"));
+
+            Map<Material, Double> prices = new EnumMap<>(Material.class);
+            for (Material material : Material.values()) {
+                if (!material.isItem() || material.isAir()) continue;
+                try {
+                    Object raw = getPrice.invoke(worth, essentials, new org.bukkit.inventory.ItemStack(material));
+                    if (raw instanceof BigDecimal value && value.signum() >= 0) {
+                        prices.put(material, value.doubleValue());
+                    }
+                } catch (ReflectiveOperationException | IllegalArgumentException ignored) {
+                    // Unsupported/non-item material or no compatible Essentials value.
+                }
+            }
+
+            int changed = catalog.syncSellPrices(prices);
+            lastWorthModified = modified;
+            materialPrices.rebuild(catalog);
+            if (changed > 0 || force) {
+                getLogger().info("Synced " + changed + " MiraShop sell price(s) from Essentials runtime Worth table. "
+                        + prices.size() + " sellable material(s) loaded.");
+            }
+        } catch (ReflectiveOperationException ex) {
+            getLogger().severe("Failed to read Essentials Worth API: " + ex.getMessage());
         }
     }
 
