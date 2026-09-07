@@ -55,5 +55,5 @@ jobs:
             gh release create "$TAG" "$JAR" \
               --target "${{ github.sha }}" \
               --title "MiraShop $TAG" \
-              --notes "Makes Essentials worth.yml the authoritative source for MiraShop sell prices. MiraShop mirrors worth values on startup/reload and watches worth.yml for changes on a configurable interval while preserving independent buy prices."
+              --notes "Makes MiraShop sell prices mirror EssentialsX Worth#getPrice exactly. Fixes modern worth.yml material-key handling, reloads Essentials worth data on file changes, and keeps MiraShop Sell values identical to /worth unit prices while preserving independent buy prices."
           fi
