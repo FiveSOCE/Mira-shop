@@ -231,6 +231,41 @@ public final class ShopCatalog {
         yaml.set(base + ".sell", sell);
     }
 
+    public synchronized int syncSellPrices(Map<Material, Double> worth) {
+        if (yaml == null) return 0;
+        ConfigurationSection root = yaml.getConfigurationSection("sections");
+        if (root == null) return 0;
+
+        int changed = 0;
+        for (String sectionId : root.getKeys(false)) {
+            if (REMOVED_SECTIONS.contains(sectionId.toLowerCase(Locale.ROOT))) continue;
+            ConfigurationSection itemRoot = root.getConfigurationSection(sectionId + ".items");
+            if (itemRoot == null) continue;
+
+            for (String itemId : itemRoot.getKeys(false)) {
+                String base = "sections." + sectionId + ".items." + itemId;
+                ConfigurationSection item = itemRoot.getConfigurationSection(itemId);
+                if (item == null || item.contains("spawner-type") || item.contains("item")) continue;
+
+                Material material = Material.matchMaterial(item.getString("material", itemId));
+                if (material == null || blockedFromShop(material) || restrictedEquipment(material)) continue;
+
+                double next = worth.getOrDefault(material, -1D);
+                double current = yaml.getDouble(base + ".sell", -1D);
+                if (Double.compare(current, next) != 0) {
+                    yaml.set(base + ".sell", next);
+                    changed++;
+                }
+            }
+        }
+
+        if (changed > 0) {
+            saveYaml();
+            load();
+        }
+        return changed;
+    }
+
     public Collection<ShopSection> sections() { return Collections.unmodifiableCollection(sections.values()); }
     public Optional<ShopSection> section(String id) { return Optional.ofNullable(sections.get(id.toLowerCase(Locale.ROOT))); }
 
