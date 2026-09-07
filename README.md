@@ -1,10 +1,10 @@
 # MiraShop
 
-MiraShop v0.1.14 is the first-party GUI economy shop for the Mira Paper server suite. It provides configurable buy/sell sections, bulk transactions, typed-spawner support, inventory selling, temporary sales and economy analytics backed by Vault, now with optional centralized MiraCosmetics transaction audio.
+MiraShop v0.1.15 is the first-party GUI economy shop for the Mira Paper server suite. It provides configurable buy/sell sections, bulk transactions, typed-spawner support, inventory selling, temporary sales and economy analytics backed by Vault, now with optional centralized MiraCosmetics transaction audio.
 
 ## Download
 
-[**Download MiraShop v0.1.14**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.14/MiraShop-0.1.14.jar)
+[**Download MiraShop v0.1.15**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.15/MiraShop-0.1.15.jar)
 
 [View All Releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
@@ -89,3 +89,8 @@ The main GUI was expanded to a 5-row storefront with category item counts, a cle
 Renewable/automated sell values are intentionally conservative. High-value mining assets such as Diamond and Netherite retain stronger sell ratios. PvP, raiding, crafted utility and convenience items are predominantly buy-only to prevent crafting arbitrage.
 
 Default spawners now range from Chicken at $25,000 through Iron Golem at $2,500,000, with Creeper, Slime, Blaze, Enderman, Witch and Guardian tiers included.
+
+
+### Existing installs
+
+v0.1.15 includes a one-time catalog migration. Existing `plugins/MiraShop/shops.yml` files receive the new built-in Factions sections, prices, and spawner tiers automatically on first startup. Unrelated custom sections are preserved.
