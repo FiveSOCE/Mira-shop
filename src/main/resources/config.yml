@@ -1,3 +1,8 @@
+essentials-worth:
+  # Essentials worth.yml is the source of truth for MiraShop SELL prices.
+  # MiraShop checks for file changes at this interval and mirrors matching materials.
+  sync-seconds: 30
+
 currency:
   symbol: "$"
   decimals: 2
