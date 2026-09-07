@@ -55,5 +55,5 @@ jobs:
             gh release create "$TAG" "$JAR" \
               --target "${{ github.sha }}" \
               --title "MiraShop $TAG" \
-              --notes "Factions economy/catalog overhaul with one-time migration for existing shops.yml files, expanded categories, polished storefront, conservative renewable sell values, and updated spawner progression."
+              --notes "Fine-tunes the Factions shop: restores the simpler category layout, raises staple farm sell values, removes redundant PvP and Nether/End sections, blocks MiraCombat-disabled materials and shulker items from the catalog, and migrates existing shops.yml files."
           fi
