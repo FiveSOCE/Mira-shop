@@ -21,6 +21,7 @@ public final class ShopCatalog {
     private static final Set<String> REMOVED_SECTIONS = Set.of("tools", "armor", "brewing", "misc");
     private static final NamespacedKey MIRA_SPAWNER_TYPE = NamespacedKey.fromString("miraspawners:spawner_mob_type");
     private static final String V014_MIGRATION = "meta.migrations.v0_1_4_custom_items";
+    private static final String V015_FACTIONS_ECONOMY = "meta.migrations.v0_1_15_factions_economy";
 
     private final MiraShopPlugin plugin;
     private final Map<String, ShopSection> sections = new LinkedHashMap<>();
@@ -103,6 +104,12 @@ public final class ShopCatalog {
             changed = true;
         }
 
+        if (!yaml.getBoolean(V015_FACTIONS_ECONOMY, false)) {
+            applyV015FactionsEconomy();
+            yaml.set(V015_FACTIONS_ECONOMY, true);
+            changed = true;
+        }
+
         ConfigurationSection root = yaml.getConfigurationSection("sections");
         if (root != null) for (String sectionId : root.getKeys(false)) {
             ConfigurationSection items = root.getConfigurationSection(sectionId + ".items");
@@ -149,6 +156,45 @@ public final class ShopCatalog {
         setSellPreset("mobdrops", "feather", "FEATHER", 2D);
         setSellPreset("ores", "iron_ingot", "IRON_INGOT", 15D);
         setSellPreset("ores", "emerald", "EMERALD", 20D);
+    }
+
+    private void applyV015FactionsEconomy() {
+        try (var input = plugin.getResource("shops.yml")) {
+            if (input == null) {
+                plugin.getLogger().warning("Could not load bundled shops.yml for v0.1.15 economy migration.");
+                return;
+            }
+
+            YamlConfiguration defaults = YamlConfiguration.loadConfiguration(
+                    new java.io.InputStreamReader(input, java.nio.charset.StandardCharsets.UTF_8)
+            );
+            ConfigurationSection defaultSections = defaults.getConfigurationSection("sections");
+            if (defaultSections == null) return;
+
+            for (String sectionId : defaultSections.getKeys(false)) {
+                String sourceRoot = "sections." + sectionId;
+                String targetRoot = "sections." + sectionId;
+
+                yaml.set(targetRoot + ".name", defaults.getString(sourceRoot + ".name", sectionId));
+                yaml.set(targetRoot + ".icon", defaults.getString(sourceRoot + ".icon", "CHEST"));
+
+                ConfigurationSection items = defaults.getConfigurationSection(sourceRoot + ".items");
+                if (items == null) continue;
+
+                for (String itemId : items.getKeys(false)) {
+                    String sourceItem = sourceRoot + ".items." + itemId;
+                    String targetItem = targetRoot + ".items." + itemId;
+
+                    for (String key : items.getConfigurationSection(itemId).getKeys(false)) {
+                        yaml.set(targetItem + "." + key, defaults.get(sourceItem + "." + key));
+                    }
+                }
+            }
+
+            plugin.getLogger().info("Applied MiraShop v0.1.15 Factions economy/catalog migration.");
+        } catch (Exception ex) {
+            plugin.getLogger().severe("Failed to apply v0.1.15 Factions economy migration: " + ex.getMessage());
+        }
     }
 
     private void setSpawnerPreset(String id, String type, double buy) {
