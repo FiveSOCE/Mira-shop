@@ -14,14 +14,18 @@ import com.mira.shop.service.*;
 import com.mira.shop.util.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.scheduler.BukkitTask;
+
+import java.io.File;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.text.DecimalFormat;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
+import java.util.EnumMap;
+import java.util.Map;
 
 public final class MiraShopPlugin extends JavaPlugin {
     private final DecimalFormat money = new DecimalFormat("0.00");
@@ -31,6 +35,8 @@ public final class MiraShopPlugin extends JavaPlugin {
     private SaleEventService sales;
     private CachedSpawnerPriceService spawnerPrices;
     private CachedMaterialPriceService materialPrices;
+    private BukkitTask worthSyncTask;
+    private long lastWorthModified = Long.MIN_VALUE;
 
     @Override
     public void onEnable() {
@@ -64,9 +70,10 @@ public final class MiraShopPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new SaleCommandListener(this, sales), this);
 
         Bukkit.getScheduler().runTask(this, () -> {
-            syncEssentialsWorth();
+            syncFromEssentialsWorth(true);
             publishSpawnerPriceCache();
         });
+        startWorthWatcher();
         getLogger().info("MiraShop v" + getPluginMeta().getVersion() + " enabled with " + catalog.sections().size() + " preset sections and " + sales.active().size() + " active sale(s).");
     }
 
@@ -75,7 +82,7 @@ public final class MiraShopPlugin extends JavaPlugin {
         catalog.load();
         economy.hook();
         materialPrices.rebuild(catalog);
-        Bukkit.getScheduler().runTask(this, this::syncEssentialsWorth);
+        Bukkit.getScheduler().runTask(this, () -> syncFromEssentialsWorth(true));
     }
 
     public void publishSpawnerPriceCache() {
@@ -95,13 +102,54 @@ public final class MiraShopPlugin extends JavaPlugin {
     public EconomyStatsService stats() { return stats; }
     public SaleEventService sales() { return sales; }
 
-    public void syncEssentialsWorth() {
-        if (Bukkit.getPluginManager().getPlugin("Essentials") == null) return;
-        Set<Material> synced = new HashSet<>();
-        catalog.sections().forEach(section -> section.items().forEach(item -> {
-            if (!item.canSell() || !synced.add(item.material())) return;
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "setworth " + item.material().name().toLowerCase(Locale.ROOT) + " " + item.sellPrice());
-        }));
+    private void startWorthWatcher() {
+        if (worthSyncTask != null) worthSyncTask.cancel();
+        long seconds = Math.max(5L, getConfig().getLong("essentials-worth.sync-seconds", 30L));
+        worthSyncTask = Bukkit.getScheduler().runTaskTimer(this, () -> syncFromEssentialsWorth(false), seconds * 20L, seconds * 20L);
+    }
+
+    public void syncFromEssentialsWorth(boolean force) {
+        var essentials = Bukkit.getPluginManager().getPlugin("Essentials");
+        if (essentials == null || catalog == null) return;
+
+        File worthFile = new File(essentials.getDataFolder(), "worth.yml");
+        if (!worthFile.isFile()) {
+            if (force) getLogger().warning("Essentials worth.yml not found; MiraShop sell prices were not synced.");
+            return;
+        }
+
+        long modified = worthFile.lastModified();
+        if (!force && modified == lastWorthModified) return;
+
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(worthFile);
+        ConfigurationSection section = yaml.getConfigurationSection("worth");
+        if (section == null) section = yaml;
+
+        Map<Material, Double> prices = new EnumMap<>(Material.class);
+        for (String key : section.getKeys(false)) {
+            Material material = Material.matchMaterial(key);
+            if (material == null) material = Material.matchMaterial(key.toUpperCase(java.util.Locale.ROOT));
+            double value = section.getDouble(key, -1D);
+            if (material != null && Double.isFinite(value) && value >= 0D) {
+                prices.put(material, value);
+            }
+        }
+
+        int changed = catalog.syncSellPrices(prices);
+        lastWorthModified = modified;
+        materialPrices.rebuild(catalog);
+        if (changed > 0 || force) {
+            getLogger().info("Synced " + changed + " MiraShop sell price(s) from Essentials worth.yml. "
+                    + prices.size() + " worth entr" + (prices.size() == 1 ? "y" : "ies") + " loaded.");
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        if (worthSyncTask != null) {
+            worthSyncTask.cancel();
+            worthSyncTask = null;
+        }
     }
 
     public String message(String key) { return getConfig().getString("messages." + key, "&cMissing message: " + key); }
