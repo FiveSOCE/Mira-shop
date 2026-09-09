@@ -8,8 +8,6 @@
 
 [View all releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
-MiraShop v0.1.16 is the first-party GUI economy shop for the Mira Paper server suite. It provides configurable buy/sell sections, bulk transactions, typed-spawner support, inventory selling, temporary sales and economy analytics backed by Vault, now with optional centralized MiraCosmetics transaction audio.
-
 ## Requirements / Dependencies
 
 - Paper 1.21.11
