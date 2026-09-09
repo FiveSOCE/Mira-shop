@@ -4,7 +4,7 @@ MiraShop v0.1.16 is the first-party GUI economy shop for the Mira Paper server s
 
 ## Download
 
-[**Download MiraShop v0.1.16**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.16/MiraShop-0.1.16.jar)
+[**Download MiraShop v0.1.16**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.19/MiraShop-0.1.19.jar)
 
 [View All Releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
