@@ -123,7 +123,7 @@ public final class TransactionService {
         if (item.customTemplate()) return true;
         if (stack.hasItemMeta()) {
             var meta = stack.getItemMeta();
-            if (meta.hasDisplayName() || meta.hasCustomName()) return false;
+            if (meta.hasDisplayName()) return false;
             if (!meta.getPersistentDataContainer().isEmpty()) return false;
             if (meta.hasEnchants() || meta.hasCustomModelData()) return false;
             if (meta instanceof org.bukkit.inventory.meta.Damageable damageable && damageable.hasDamage()) return false;
