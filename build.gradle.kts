@@ -32,5 +32,5 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 tasks.jar {
-    archiveFileName.set("MiraShop-${project.version}.jar")
+    archiveFileName.set("MiraShop_1.21.11-26.2.jar")
 }
