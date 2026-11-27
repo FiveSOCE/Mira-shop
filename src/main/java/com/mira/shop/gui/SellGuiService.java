@@ -91,7 +91,7 @@ public final class SellGuiService {
         ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Text.c(" "));
-        meta.setEnchantmentGlintOverride(true);
+        // ItemMeta glint override does not exist in Paper 1.18.2.
         item.setItemMeta(meta);
         return item;
     }
