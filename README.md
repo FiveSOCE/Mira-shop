@@ -1,22 +1,33 @@
 # MiraShop
 
-## Download
+## Versioned downloads
 
-**Latest compatibility release: v0.1.19**
+| Paper server | Java | JAR | Download |
+| --- | --- | --- | --- |
+| **1.18.2** | Java 17 | `MiraShop_1.18.2.jar` | [Legacy release](https://github.com/FiveSOCE/Mira-shop/releases/tag/dev-1.18.2) |
+| **1.21.11–26.2** | Java 21 baseline; 26.2 server requires newer Java | `MiraShop_1.21.11-26.2.jar` | [Modern release](https://github.com/FiveSOCE/Mira-shop/releases/tag/compat-modern-1.21.11-26.2) |
 
-[**Download MiraShop-0.1.19.jar**](https://github.com/FiveSOCE/Mira-shop/releases/download/v0.1.19/MiraShop-0.1.19.jar)
+Links become usable after their builds pass and the named JAR is published. **Paper 1.19–1.21.10 and runtime data-migration tests are not yet certified.** Back up `plugins/MiraShop/` before switching versions.
 
-[View all releases](https://github.com/FiveSOCE/Mira-shop/releases)
+[Legacy source](https://github.com/FiveSOCE/Mira-shop/tree/compat/1.18.2) · [Modern source](https://github.com/FiveSOCE/Mira-shop/tree/main) · [All releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
-## Requirements / Dependencies
+## Dependencies and integrations
 
-- Paper 1.21.11
-- Java 21
-- Vault
-- A Vault-compatible economy provider
-- EssentialsX recommended for worth synchronisation
-- MiraSpawners recommended for typed-spawner support
-- MiraCosmetics optional for centralized audio effects
+- **Required for functional economy:** Paper matching the JAR, the correct Java runtime, **Vault** and a working Vault-compatible economy provider.
+- **Optional:** EssentialsX for worth value synchronisation, MiraSpawners for typed spawner items, MiraCosmetics for purchase/sale sounds.
+- **MiraCore:** Not required. MiraShop runs its own configuration and economy services.
+- **Compatibility note:** Materials introduced after 1.18.2 must be handled as optional data, not required registry values, in the legacy edition.
+
+## Permissions
+
+| Permission | Default | Purpose |
+| --- | --- | --- |
+| `mirashop.use` | All | Open shop and search |
+| `mirashop.buy` | All | Purchase items |
+| `mirashop.sell` | All | Sell items |
+| `mirashop.sellall` | All | Use `/sellall` |
+| `mirashop.admin` | OP | Admin shop management and economy analytics |
+| `mirashop.section.*` | All | Access the configured sections |
 
 ## How MiraShop Works
 
