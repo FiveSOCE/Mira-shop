@@ -22,7 +22,7 @@ public record ShopItem(String id, ItemStack template, double buyPrice, double se
     public boolean customTemplate() {
         if (!template.hasItemMeta()) return false;
         var meta = template.getItemMeta();
-        return meta.hasDisplayName() || meta.hasCustomName() || !meta.getPersistentDataContainer().isEmpty()
+        return meta.hasDisplayName() || !meta.getPersistentDataContainer().isEmpty()
                 || meta.hasEnchants() || meta.hasCustomModelData();
     }
 }
