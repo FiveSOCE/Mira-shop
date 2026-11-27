@@ -369,9 +369,9 @@ public final class ShopCatalog {
         String n = material.name();
         return n.endsWith("_SWORD") || n.endsWith("_PICKAXE") || n.endsWith("_AXE") || n.endsWith("_SHOVEL") || n.endsWith("_HOE")
                 || n.endsWith("_HELMET") || n.endsWith("_CHESTPLATE") || n.endsWith("_LEGGINGS") || n.endsWith("_BOOTS")
-                || material == Material.BOW || material == Material.CROSSBOW || material == Material.TRIDENT || material == Material.MACE
+                || material == Material.BOW || material == Material.CROSSBOW || material == Material.TRIDENT || n.equals("MACE")
                 || material == Material.SHIELD || material == Material.ELYTRA || material == Material.FISHING_ROD || material == Material.SHEARS
-                || material == Material.FLINT_AND_STEEL || material == Material.BRUSH;
+                || material == Material.FLINT_AND_STEEL || n.equals("BRUSH");
     }
 
     private static String pretty(String input) {
