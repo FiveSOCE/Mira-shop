@@ -4,10 +4,10 @@
 
 | Paper server | Java | JAR | Download |
 | --- | --- | --- | --- |
-| **1.18.2** | Java 17 | `MiraShop_1.18.2.jar` | [Legacy release](https://github.com/FiveSOCE/Mira-shop/releases/tag/dev-1.18.2) |
-| **1.21.11–26.2** | Java 21 baseline; 26.2 server requires newer Java | `MiraShop_1.21.11-26.2.jar` | [Modern release](https://github.com/FiveSOCE/Mira-shop/releases/tag/compat-modern-1.21.11-26.2) |
+| **1.18.2** | Java 17 | `MiraShop_1.18.2.jar` | [Download legacy JAR](https://github.com/FiveSOCE/Mira-shop/releases/download/dev-1.18.2/MiraShop_1.18.2.jar) |
+| **1.21.11–26.2** | Java 21 baseline; 26.2 server requires newer Java | `MiraShop_1.21.11-26.2.jar` | [Download modern JAR](https://github.com/FiveSOCE/Mira-shop/releases/download/compat-modern-1.21.11-26.2/MiraShop_1.21.11-26.2.jar) |
 
-Links become usable after their builds pass and the named JAR is published. **Paper 1.19–1.21.10 and runtime data-migration tests are not yet certified.** Back up `plugins/MiraShop/` before switching versions.
+Both versioned GitHub release assets have been verified after successful CI compilation. **Paper 1.19–1.21.10 and runtime data-migration tests are not yet certified.** Back up `plugins/MiraShop/` before switching versions.
 
 [Legacy source](https://github.com/FiveSOCE/Mira-shop/tree/compat/1.18.2) · [Modern source](https://github.com/FiveSOCE/Mira-shop/tree/main) · [All releases](https://github.com/FiveSOCE/Mira-shop/releases)
 
