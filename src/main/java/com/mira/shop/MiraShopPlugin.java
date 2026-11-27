@@ -75,7 +75,7 @@ public final class MiraShopPlugin extends JavaPlugin {
             publishSpawnerPriceCache();
         });
         startWorthWatcher();
-        getLogger().info("MiraShop v" + getPluginMeta().getVersion() + " enabled with " + catalog.sections().size() + " preset sections and " + sales.active().size() + " active sale(s).");
+        getLogger().info("MiraShop v" + getDescription().getVersion() + " enabled with " + catalog.sections().size() + " preset sections and " + sales.active().size() + " active sale(s).");
     }
 
     public void reloadAll() {
